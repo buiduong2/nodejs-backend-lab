@@ -1,3 +1,4 @@
+import { NotFoundError } from '../../error/NotFoundError.ts';
 import type { Task } from './task.types.ts'
 
 export const tasks: Task[] = [
@@ -40,7 +41,7 @@ async function findById(id: number): Promise<Task | undefined> {
 
 async function create(req: Omit<Task, 'id'>): Promise<Task> {
 	const task: Task = {
-		id: ++nextId,
+		id: nextId++,
 		title: req.title,
 		desc: req.desc
 	}
@@ -56,7 +57,7 @@ async function update(dto: Task): Promise<Task> {
 		existed.desc = dto.desc
 		return structuredClone(existed)
 	} else {
-		throw new Error('Resource not found')
+		throw new NotFoundError('Resource not found')
 	}
 }
 
@@ -65,7 +66,7 @@ async function deleteById(id: number): Promise<void> {
 	if (index >= 0) {
 		tasks.splice(index, 1)
 	} else {
-		throw new Error('resource Not FOund')
+		throw new NotFoundError('resource Not FOund')
 	}
 }
 

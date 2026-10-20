@@ -1,5 +1,6 @@
 import type { CreateTaskDto, Task, UpdateTaskDto } from './task.types.ts'
 import taskRepository from './task.repository.ts'
+import { NotFoundError } from '../../error/NotFoundError.ts'
 
 async function findAll(): Promise<Task[]> {
 	return taskRepository.findAll()
@@ -8,7 +9,7 @@ async function findAll(): Promise<Task[]> {
 async function findById(id: number): Promise<Task> {
 	const task = await taskRepository.findById(id)
 	if (!task) {
-		throw new Error('Resource not found')
+		throw new NotFoundError('Resource not found')
 	}
 
 	return task
@@ -32,14 +33,14 @@ async function update(id: number, dto: UpdateTaskDto): Promise<Task> {
 		return taskRepository.update(oldTask)
 	}
 
-	throw new Error('resource not found')
+	throw new NotFoundError('resource not found')
 }
 
 async function deleteById(id: number): Promise<void> {
 	if (await taskRepository.existById(id)) {
 		return taskRepository.deleteById(id)
 	}
-	throw new Error('resource not found')
+	throw new NotFoundError('resource not found')
 }
 
 export default {
