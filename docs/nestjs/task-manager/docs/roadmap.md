@@ -53,26 +53,26 @@ Lộ trình xây dựng **Task Management REST API** bằng NestJS, TypeScript, 
 - [X] Tạo User, Task, ChecklistItem Entities.
 - [x] Thiết lập quan hệ User–Task (One-to-Many).
 - [x] Thiết lập quan hệ Task–ChecklistItem (One-to-Many).
-- [ ] Tạo migration để khởi tạo database.
+- [x] Tạo migration để khởi tạo database.
 
 #### Learning
 
-- [ ] `@Entity()`, `@Column()`, `@PrimaryGeneratedColumn()`.
-- [ ] `@CreateDateColumn()`, `@UpdateDateColumn()`.
-- [ ] `@ManyToOne()`, `@OneToMany()`, `@JoinColumn()`.
-- [ ] `TypeOrmModule.forFeature()`.
-- [ ] Migration và `synchronize: false`.
-- [ ] So sánh TypeORM Entity với JPA Entity.
+- [x] `@Entity()`, `@Column()`, `@PrimaryGeneratedColumn()`.
+- [x] `@CreateDateColumn()`, `@UpdateDateColumn()`.
+- [x] `@ManyToOne()`, `@OneToMany()`, `@JoinColumn()`.
+- [x] `TypeOrmModule.forFeature()`.
+- [x] Migration và `synchronize: false`.
+- [x] So sánh TypeORM Entity với JPA Entity.
 
 ### 2.2 Repository & CRUD
 
 #### Features
 
-- [ ] `POST /tasks` — Tạo Task.
-- [ ] `GET /tasks` — Lấy danh sách Task.
-- [ ] `GET /tasks/:id` — Lấy chi tiết Task.
-- [ ] `PATCH /tasks/:id` — Cập nhật Task.
-- [ ] `DELETE /tasks/:id` — Xóa Task.
+- [x] `POST /tasks` — Tạo Task.
+- [x] `GET /tasks` — Lấy danh sách Task.
+- [x] `GET /tasks/:id` — Lấy chi tiết Task.
+- [x] `PATCH /tasks/:id` — Cập nhật Task.
+- [x] `DELETE /tasks/:id` — Xóa Task.
 - [ ] `POST /tasks/:id/checklists` — Thêm ChecklistItem.
 - [ ] `PATCH /tasks/:id/checklists/:itemId` — Cập nhật ChecklistItem.
 
