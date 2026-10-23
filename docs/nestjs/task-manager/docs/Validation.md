@@ -8,3 +8,9 @@
 
 -Fielld thừa sẽ bị loại bỏ
 - nên khai báo `transform : true`: để nhận đúng plain object đã được validate
+
+
+##  Thứ tự trong class validation
+
+- `Transform -> validation`
+- Khi undefined thì ko gọi `transform`

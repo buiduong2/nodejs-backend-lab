@@ -1,7 +1,7 @@
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
 import { TaskBaseEntity } from './TaskBaseEntity';
 import { User } from '../../users/entities/user.entity';
-import { ChecklistItem } from './check-item.entity';
+import { ChecklistItem } from './checklist-item.entity';
 
 export enum TaskStatus {
   TODO = 'TODO',

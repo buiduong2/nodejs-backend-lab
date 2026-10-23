@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { Task } from '../entities/tasks.entity';
-import { ChecklistItem } from '../entities/check-item.entity';
+import { ChecklistItem } from '../entities/checklist-item.entity';
 import { CreateChecklistItemDto } from '../dtos/create-checklist-item.dto';
 import { UpdateChecklistItemDto } from '../dtos/update-checklist-item.dto';
 

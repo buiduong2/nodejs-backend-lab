@@ -73,8 +73,8 @@ Lộ trình xây dựng **Task Management REST API** bằng NestJS, TypeScript, 
 - [x] `GET /tasks/:id` — Lấy chi tiết Task.
 - [x] `PATCH /tasks/:id` — Cập nhật Task.
 - [x] `DELETE /tasks/:id` — Xóa Task.
-- [ ] `POST /tasks/:id/checklists` — Thêm ChecklistItem.
-- [ ] `PATCH /tasks/:id/checklists/:itemId` — Cập nhật ChecklistItem.
+- [x] `POST /tasks/:id/checklists` — Thêm ChecklistItem.
+- [x] `PATCH /tasks/:id/checklists/:itemId` — Cập nhật ChecklistItem.
 
 #### Learning
 
@@ -270,13 +270,13 @@ Không cần ghi nhớ toàn bộ API hoặc cú pháp thư viện. Ưu tiên kh
 
 ## Learning Priorities
 
-| Topic | Priority | Time Allocation |
-|---|---|---|
-| TypeORM + QueryBuilder | Critical | 45% |
-| NestJS + Lifecycle + Auth | High | 30% |
-| Kafka | Medium | 15% |
-| Testing + Debugging | Medium | 10% |
-| MongoDB + Mongoose | Deferred | Just-in-Time |
+| Topic                     | Priority | Time Allocation |
+| ------------------------- | -------- | --------------- |
+| TypeORM + QueryBuilder    | Critical | 45%             |
+| NestJS + Lifecycle + Auth | High     | 30%             |
+| Kafka                     | Medium   | 15%             |
+| Testing + Debugging       | Medium   | 10%             |
+| MongoDB + Mongoose        | Deferred | Just-in-Time    |
 
 ## Final Goal
 

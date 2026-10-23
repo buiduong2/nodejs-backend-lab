@@ -1,28 +1,35 @@
 import {
-    Body,
-    Controller,
-    Delete,
-    Get,
-    Param,
-    ParseIntPipe,
-    Patch,
-    Post,
-    ValidationPipe
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseIntPipe,
+  Patch,
+  Post,
+  Query,
+  ValidationPipe,
 } from '@nestjs/common';
 
 import { User } from '../../users/entities/user.entity';
 import { CreateTaskDto } from '../dtos/create-task.dto';
 import { UpdateTaskDto } from '../dtos/update-task.dto';
-import { TaskListItem } from '../mapper/tasks.mapper';
 import { TasksService } from '../services/tasks.service';
+import { Page } from '../../share/dto/page.dto';
+import { TaskListItem } from '../mapper/tasks.mapper';
+import { PaginationQueryDto } from '../../share/dto/pagination-query.dto';
+import { TaskQueryDto } from '../dtos/task-query.dto';
 
 @Controller('tasks')
 export class TasksController {
   constructor(private readonly taskService: TasksService) {}
 
   @Get()
-  public findAll(): TaskListItem[] {
-    return this.taskService.findAll();
+  async findAll(
+    @Query(new ValidationPipe({ transform: true, whitelist: true }))
+    taskQueryDto: TaskQueryDto,
+  ): Promise<Page<TaskListItem>> {
+    return this.taskService.findAll(taskQueryDto);
   }
 
   @Get(':id')

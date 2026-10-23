@@ -2,7 +2,7 @@ import 'dotenv/config';
 import { DataSource } from 'typeorm';
 
 import { Task } from '../tasks/entities/tasks.entity';
-import { ChecklistItem } from '../tasks/entities/check-item.entity';
+import { ChecklistItem } from '../tasks/entities/checklist-item.entity';
 import { User } from '../users/entities/user.entity';
 
 export default new DataSource({

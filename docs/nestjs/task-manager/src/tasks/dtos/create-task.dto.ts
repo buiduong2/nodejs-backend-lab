@@ -1,11 +1,19 @@
-import { Type } from "class-transformer";
-import { IsEnum, IsNotEmpty, IsNotEmptyObject, IsObject, IsOptional, IsString, MaxLength, ValidateNested } from "class-validator";
+import { Type } from 'class-transformer';
+import {
+  IsArray,
+  IsBoolean,
+  IsEnum,
+  IsNotEmpty,
+  IsNotEmptyObject,
+  IsObject,
+  IsOptional,
+  IsString,
+  MaxLength,
+  ValidateNested,
+} from 'class-validator';
+import { TaskStatus } from '../entities/tasks.entity';
 
-export enum TaskStatus {
-  TODO = 'TODO',
-  IN_PROGRESS = 'IN_PROGRESS',
-  DONE = 'DONE',
-}
+
 
 export class TaskData {
   @IsString()
@@ -21,10 +29,27 @@ export class TaskData {
   status: TaskStatus;
 }
 
+export class CreateTaskData extends TaskData {
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => ChecklistItemData)
+  checklistItems?: ChecklistItemData[];
+}
+
+class ChecklistItemData {
+  @IsString()
+  content: string;
+
+  @IsBoolean()
+  @IsOptional()
+  isCompleted: boolean;
+}
+
 export class CreateTaskDto {
   @IsNotEmptyObject()
   @IsObject()
   @ValidateNested()
-  @Type(() => TaskData) // Chuyển kiểu dữ liệu
-  task: TaskData;
+  @Type(() => CreateTaskData) // Chuyển kiểu dữ liệu
+  task: CreateTaskData;
 }

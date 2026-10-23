@@ -95,3 +95,12 @@ npm install class-validator class-transformer
     - Class-validator: cung cấp validator như `@IsString()` , `@IsNotEmpty()` , `@MaxLength`
     - class-transofrmer: Hỗ trợ chuyển đổi object sang DTO class
     - VAlidation Pipe: Thành phần có sẵn của NestJS thực hiện validation trong request lifecyle
+
+
+### Tiến hành thêm Decorator validator
+
+- Sử udnjg isVAlidSort(sortFields[])
+sort?:string;
+
+
+- Ta sẽ kiểm tra 
