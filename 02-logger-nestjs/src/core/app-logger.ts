@@ -1,25 +1,16 @@
-import { Inject, Injectable, Scope } from '@nestjs/common'
-import { INQUIRER } from '@nestjs/core'
 import { LogContext } from '../context/log-context'
 import { LogDispatcher } from './log-dispatcher'
-import { LogLevel, LogLevelPoint } from './log-level'
 import { LogEntry } from './log-entry'
-import { LOG_MIN_LEVEL } from '../constants/logging.tokens'
+import { LogLevel, LogLevelPoint } from './log-level'
 
-@Injectable({ scope: Scope.TRANSIENT })
+
 export class AppLogger {
-	private readonly loggerName: string
-
 	constructor(
-		@Inject(INQUIRER)
-		private readonly parent: object | undefined,
+		private readonly loggerName: string,
 		private readonly logContext: LogContext,
 		private readonly dispatcher: LogDispatcher,
-		@Inject(LOG_MIN_LEVEL)
 		private readonly minLevel: LogLevel
-	) {
-		this.loggerName = this.parent?.constructor?.name ?? 'Application'
-	}
+	) {}
 
 	debug(message: string, attributes?: Record<string, unknown>): void {
 		this.log('debug', message, attributes)
