@@ -1,4 +1,11 @@
-import { DynamicModule, Module, Provider } from '@nestjs/common'
+import {
+	DynamicModule,
+	Inject,
+	MiddlewareConsumer,
+	Module,
+	NestModule,
+	Provider
+} from '@nestjs/common'
 import { LogContext } from '../context/log-context'
 import { LogDispatcher, LogFallback, logFallback } from '../core/log-dispatcher'
 import { ConsoleSink } from '../sinks/console.sink'
@@ -6,14 +13,29 @@ import { coloredTextFormatter } from '../sinks/formatters/colored-text.formatter
 import { LogSink } from '../sinks/log-sink.interface'
 import { LoggingOptions } from './logging-options'
 import {
-    LOG_FALLBACK_TOKEN,
-    LOG_MIN_LEVEL,
-    LOG_SINKS_TOKEN
+	LOG_FALLBACK_TOKEN,
+	LOG_HTTP_CONTEXT_ENABLED,
+	LOG_MIN_LEVEL,
+	LOG_SINKS_TOKEN
 } from './logging.tokens'
 import { NestLogger } from './nest-logger'
+import { RequestContextMiddleware } from './request-context.middleware'
 
 @Module({})
-export class LoggingModule {
+export class LoggingModule implements NestModule {
+	constructor(
+		@Inject(LOG_HTTP_CONTEXT_ENABLED)
+		private readonly httpContextEnabled: boolean
+	) {}
+
+	configure(consumer: MiddlewareConsumer): void {
+		if (!this.httpContextEnabled) {
+			return
+		}
+
+		consumer.apply(RequestContextMiddleware).forRoutes('*')
+	}
+
 	/**
 	 * Cấu hình LoggingModule và khởi tạo các thành phần logging.
 	 *
@@ -80,6 +102,10 @@ export class LoggingModule {
 				{
 					provide: LOG_MIN_LEVEL,
 					useValue: level ?? 'info'
+				},
+				{
+					provide: LOG_HTTP_CONTEXT_ENABLED,
+					useValue: options.httpContext ?? true
 				}
 			],
 			exports: [NestLogger, LogContext],

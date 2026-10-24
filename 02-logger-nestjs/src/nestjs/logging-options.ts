@@ -35,4 +35,11 @@ export interface LoggingOptions {
 	 * Nếu không cung cấp, lỗi được ghi ra stderr.
 	 */
 	sinkErrorLog?: InjectionToken
+
+	/**
+	 * Tự động tạo MDC cho mỗi HTTP request.
+	 *
+	 * @default true
+	 */
+	httpContext?: boolean
 }

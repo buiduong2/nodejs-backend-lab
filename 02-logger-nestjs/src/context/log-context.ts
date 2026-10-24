@@ -9,10 +9,6 @@ export type MdcData = Record<string, unknown>
  * trong cùng một asynchronous execution context mà không cần truyền
  * dữ liệu qua từng lời gọi hàm.
  *
- * LogContext có thể được sử dụng dưới dạng Singleton.
- * Mỗi async execution context vẫn có dữ liệu MDC riêng biệt,
- * giúp tránh xung đột dữ liệu giữa các HTTP request đồng thời.
- *
  * @example
  * logContext.run({ requestId: 'req-123' }, async () => {
  *   await service.execute();
