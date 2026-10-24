@@ -1,0 +1,1 @@
+export const LOG_MIN_LEVEL = Symbol('LOG_MIN_LEVEL');

@@ -30,6 +30,7 @@ export class LogContext {
 	run<T>(data: MdcData, callback: () => T): T {
 		return this.storage.run(data, callback)
 	}
+
 	/**
 	 * Lấy Context hiện tại
 	 * @returns  Trả về dữ Object sống trong một async execution context.
