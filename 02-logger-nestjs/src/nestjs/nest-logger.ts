@@ -4,7 +4,7 @@ import { INQUIRER } from "@nestjs/core";
 import { AppLogger } from "../core/app-logger";
 import { LogContext } from "../context/log-context";
 import { LogDispatcher } from "../core/log-dispatcher";
-import { LogLevel } from "../core/log-level";
+import type { LogLevel } from "../core/log-level";
 
 @Injectable({ scope: Scope.TRANSIENT })
 export class NestLogger extends AppLogger {
