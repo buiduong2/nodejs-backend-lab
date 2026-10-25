@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { LogFallback } from "nest-logging/src/";
+import { LogFallback } from "nest-logging/";
 
 @Injectable()
 export class TestFallback implements LogFallback {

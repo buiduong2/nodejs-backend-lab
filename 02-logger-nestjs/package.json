@@ -10,6 +10,16 @@
     "directories": {
         "doc": "docs"
     },
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "default": "./dist/index.js"
+        },
+        "./mongo": {
+            "types": "./dist/mongo/index.d.ts",
+            "default": "./dist/mongo/index.js"
+        }
+    },
     "scripts": {
         "clean": "rm -rf dist",
         "prebuild": "npm run clean",
@@ -23,12 +33,19 @@
         "@nestjs/common": "^12.2.0",
         "@nestjs/core": "^12.2.0",
         "reflect-metadata": "^0.2.2",
-        "rxjs": "^7.8.2"
+        "rxjs": "^7.8.2",
+        "mongodb": "^7.0.0"
+    },
+    "peerDependenciesMeta": {
+        "mongodb": {
+            "optional": true
+        }
     },
     "devDependencies": {
         "@nestjs/common": "^12.2.0",
         "@nestjs/core": "^12.2.0",
         "@types/node": "^26.6.5",
+        "mongodb": "^7.7.0",
         "reflect-metadata": "^0.2.2",
         "rxjs": "^7.8.2",
         "typescript": "^7.0.2"
