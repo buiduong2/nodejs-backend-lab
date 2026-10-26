@@ -5,7 +5,7 @@
 - [x] Chuyển hết ID của các entity sang UUID
 - [x] Cần Ghi log vào DB thay vì chỉ stdout
 - [x] So sánh Mapping giữa Select projection. Và Mapping bằng DTO sau khi full select
-- [ ] Sử dụng Task dạng tự SELF JOIN thay vì tạo ra một Checkitem
+- [x] Sử dụng Task dạng tự SELF JOIN thay vì tạo ra một Checkitem
 
 ### Lý thuyết 
 

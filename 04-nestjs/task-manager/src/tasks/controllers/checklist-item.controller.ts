@@ -16,7 +16,10 @@ import { ChecklistItemService } from '../services/checklist-item.services';
 import { CreateChecklistItemDto } from '../dtos/create-checklist-item.dto';
 import { UpdateChecklistItemDto } from '../dtos/update-checklist-item.dto';
 
-@Controller('tasks/:taskId/checklists')
+// @Controller('tasks/:taskId/checklists')
+/**
+ * @deprecated Không còn dùng checklist item nữa. Dữ liệu cũ bỏ, Dùng task đệ quy SELF JOIN
+ */
 export class ChecklistItemController {
   constructor(
     private readonly checklistItemService: ChecklistItemService,

@@ -10,9 +10,10 @@ export class ChecklistItem extends TaskBaseEntity {
   @Column({ default: false, name: 'is_completed' })
   isCompleted: boolean;
 
-  @ManyToOne(() => Task, (task) => task.checklistItems, {
+  @ManyToOne(() => Task, {
     nullable: false,
+    onDelete: 'CASCADE',
   })
-  @JoinColumn({ name: 'task_id' })
+  @JoinColumn({ name: 'task_id', foreignKeyConstraintName: 'fk_task_id' })
   task: Task;
 }

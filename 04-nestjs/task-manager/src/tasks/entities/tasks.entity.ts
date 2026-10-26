@@ -27,9 +27,21 @@ export class Task extends TaskBaseEntity {
   @ManyToOne(() => User, (user) => user.tasks, {
     nullable: false,
   })
-  @JoinColumn({ name: 'created_by' })
+  @JoinColumn({
+    name: 'created_by',
+    foreignKeyConstraintName: 'fk_tasks_created_by',
+  })
   createdBy: User;
 
-  @OneToMany(() => ChecklistItem, (item) => item.task)
-  checklistItems: ChecklistItem[];
+  @OneToMany(() => Task, (task) => task.parent)
+  children?: Task[];
+
+  @ManyToOne(() => Task, (task) => task.children, {
+    nullable: true,
+  })
+  @JoinColumn({
+    name: 'parent_id',
+    foreignKeyConstraintName: 'fk_tasks_parent',
+  })
+  parent?: Task;
 }

@@ -6,10 +6,9 @@ import { Task } from './entities/tasks.entity';
 import { TaskMapper } from './mapper/tasks.mapper';
 import { ChecklistItem } from './entities/checklist-item.entity';
 import { ChecklistItemService } from './services/checklist-item.services';
-import { ChecklistItemController } from './controllers/checklist-item.controller';
 
 @Module({
-  controllers: [TasksController, ChecklistItemController],
+  controllers: [TasksController],
   imports: [TypeOrmModule.forFeature([Task, ChecklistItem])],
   providers: [TasksService, ChecklistItemService],
 })

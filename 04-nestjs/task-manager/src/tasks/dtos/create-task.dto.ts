@@ -36,8 +36,8 @@ export class CreateTaskData extends TaskData {
   @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
-  @Type(() => ChecklistItemData)
-  checklistItems?: ChecklistItemData[];
+  @Type(() => CreateTaskData)
+  children?: CreateTaskData[];
 }
 
 class ChecklistItemData {

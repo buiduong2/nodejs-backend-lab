@@ -14,7 +14,7 @@ import { RequestTrakcingMiddleware } from './share/middlewares/request-tracking.
 import { ApiKeyGuard } from './share/guards/api-key.guard';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { RequestLoggingInterceptor } from './share/interceptors/request-logging.interceptor';
-import {LoggingModule} from 'nest-logging';
+import { LoggingModule } from 'nest-logging';
 
 @Module({
   imports: [
@@ -30,11 +30,13 @@ import {LoggingModule} from 'nest-logging';
         database: config.get<string>('DB_NAME'),
         autoLoadEntities: true,
         synchronize: false,
+        logging: ['query', 'error'], // Chỉ định hiển thị câu lệnh SQL và lỗi (hoặc để 'true' để hiện tất cả)
+        logger: 'advanced-console',
       }),
     }),
     LoggingModule.forRoot({
-        httpContext: true,
-        level :'info',
+      httpContext: true,
+      level: 'info',
     }),
     TasksModule,
     UsersModule,

@@ -20,4 +20,6 @@ export default new DataSource({
 
   // Không tự cập nhật schema khi khởi tạo datasource
   synchronize: false,
+  logging: ['query', 'error'], // Chỉ định hiển thị câu lệnh SQL và lỗi (hoặc để 'true' để hiện tất cả)
+  logger: 'advanced-console',
 });
