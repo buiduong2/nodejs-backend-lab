@@ -7,8 +7,8 @@ import {
 
 // TODO: id: UUID
 export abstract class TaskBaseEntity {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Exclude({ toPlainOnly: true })
   @CreateDateColumn({
