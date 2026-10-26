@@ -16,6 +16,7 @@ import { UpdateTaskDto } from '../dtos/update-task.dto';
 import { ChecklistItem } from '../entities/checklist-item.entity';
 import { Task } from '../entities/tasks.entity';
 import { TaskListItem, TaskMapper } from '../mapper/tasks.mapper';
+import { NestLogger } from 'nest-logging';
 
 @Injectable()
 export class TasksService {
@@ -25,9 +26,11 @@ export class TasksService {
     @InjectRepository(Task)
     private readonly taskRepository: Repository<Task>,
     private readonly dataSource: DataSource,
+    private readonly logger: NestLogger,
   ) {}
 
   create(taskDto: CreateTaskDto, userId: User['id']) {
+    this.logger.info(`do func create  userId=${userId}`);
     return this.dataSource.transaction(async (em) => {
       const task = await em.save(Task, {
         ...taskDto.task,
@@ -35,7 +38,6 @@ export class TasksService {
           id: userId,
         },
       });
-
 
       if (Array.isArray(taskDto.task.checklistItems)) {
         const checklistItems = await em.save(
@@ -104,6 +106,7 @@ export class TasksService {
     const qb = this.taskRepository.createQueryBuilder('task');
 
     const { page, limit, search, sort } = taskQueryDto;
+    this.logger.info(`do func findAll  page=${page}, limit=${limit}`);
     const offset = (page - 1) * limit;
 
     // createdAt,desc => {field: createdAt, driection: DESC}

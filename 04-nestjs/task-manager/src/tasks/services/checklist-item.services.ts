@@ -6,6 +6,7 @@ import { Task } from '../entities/tasks.entity';
 import { ChecklistItem } from '../entities/checklist-item.entity';
 import { CreateChecklistItemDto } from '../dtos/create-checklist-item.dto';
 import { UpdateChecklistItemDto } from '../dtos/update-checklist-item.dto';
+import { NestLogger } from 'nest-logging';
 
 @Injectable()
 export class ChecklistItemService {
@@ -15,9 +16,12 @@ export class ChecklistItemService {
 
     @InjectRepository(Task)
     private readonly taskRepository: Repository<Task>,
+
+    private readonly logger: NestLogger,
   ) {}
 
   async create(taskId: string, dto: CreateChecklistItemDto) {
+    this.logger.info(`create taskId=${taskId} `);
     const taskExists = await this.taskRepository.existsBy({
       id: taskId,
     });

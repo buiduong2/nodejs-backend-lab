@@ -19,9 +19,9 @@ export class RequestTrakcingMiddleware implements NestMiddleware {
       const duration = performance.now() - start;
       const httpMethod = req.method;
       const url = req.originalUrl;
-      console.log(
-        `[id=${req.requestId}] ${httpMethod} - ${url} - ${res.statusCode} - ${duration.toFixed(2)}ms`,
-      );
+    //   console.log(
+    //     `[id=${req.requestId}] ${httpMethod} - ${url} - ${res.statusCode} - ${duration.toFixed(2)}ms`,
+    //   );
     });
     next();
   }

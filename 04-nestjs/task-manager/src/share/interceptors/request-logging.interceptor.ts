@@ -13,11 +13,11 @@ export class RequestLoggingInterceptor implements NestInterceptor {
     const request = context.switchToHttp().getRequest<Request>();
 
     const start = performance.now();
-    console.log(`[BEFORE] [id-${request.requestId}]: ${start}`)
+    // console.log(`[BEFORE] [id-${request.requestId}]: ${start}`)
 
     return next.handle().pipe(
       tap(() => {
-        console.log(`[AFTER] [id-${request.requestId}] : ${(performance.now() - start ).toFixed(2)}`)
+        // console.log(`[AFTER] [id-${request.requestId}] : ${(performance.now() - start ).toFixed(2)}`)
       })
     );
   }

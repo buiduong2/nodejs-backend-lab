@@ -14,6 +14,7 @@ import { RequestTrakcingMiddleware } from './share/middlewares/request-tracking.
 import { ApiKeyGuard } from './share/guards/api-key.guard';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { RequestLoggingInterceptor } from './share/interceptors/request-logging.interceptor';
+import {LoggingModule} from 'nest-logging';
 
 @Module({
   imports: [
@@ -31,9 +32,11 @@ import { RequestLoggingInterceptor } from './share/interceptors/request-logging.
         synchronize: false,
       }),
     }),
-
+    LoggingModule.forRoot({
+        httpContext: true,
+        level :'info',
+    }),
     TasksModule,
-
     UsersModule,
   ],
   controllers: [AppController],
