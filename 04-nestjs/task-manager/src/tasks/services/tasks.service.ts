@@ -36,11 +36,6 @@ export class TasksService {
         },
       });
 
-      
-    //   let a = true;
-    //   if (a) {
-    //     throw new BadRequestException();
-    //   }
 
       if (Array.isArray(taskDto.task.checklistItems)) {
         const checklistItems = await em.save(
@@ -62,7 +57,7 @@ export class TasksService {
     });
   }
 
-  async update(id: number, taskDto: UpdateTaskDto) {
+  async update(id: string, taskDto: UpdateTaskDto) {
     // update repository.update() mặc định bỏ qua những property có giá trị undefined trong update payload.
     const updateResult = await this.taskRepository.update(id, {
       ...taskDto.task,
@@ -73,14 +68,18 @@ export class TasksService {
     }
   }
 
-  async delete(id: number) {
-    const delRs = await this.taskRepository.delete(id);
-    if (delRs.affected === 0) {
+  async delete(id: string) {
+    const result = await this.dataSource.transaction(async (em) => {
+      await em.getRepository(ChecklistItem).delete({ task: { id } });
+      return em.getRepository(Task).delete(id);
+    });
+
+    if (result.affected === 0) {
       throw new NotFoundException(`Task ${id} not found`);
     }
   }
 
-  async findById(id: number) {
+  async findById(id: string) {
     const qb = this.taskRepository.createQueryBuilder('task');
     qb.leftJoinAndSelect('task.checklistItems', 'checklistItem');
 

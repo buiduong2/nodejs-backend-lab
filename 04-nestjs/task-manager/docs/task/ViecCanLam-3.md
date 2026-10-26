@@ -49,3 +49,17 @@
 | Tai sử dụng logic chuyển đổi | TỐt                                                                         | THường gắn với từng Entity           |
 
 
+
+
+## Dùng add SELECT tối ưu hơn như thế nào so với map response bằng code.
+
+- `Tối ưu hơn`
+    - Tối ưu hóa Network Payload: giảm băng thông mạng
+    - Tối ưu hóa Bộ nhớ (Memory Footprint) trên Node.js Server
+    - Tận dụng sức mạnh xử lý của Database Engine
+    - code ngắn gọn hơn
+
+- `Không tối ưu hơn`
+  - Ít tường minh
+  - Map = code ->  Có thể  tái sử dụng
+  - Map = code -> Type safety 

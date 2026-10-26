@@ -17,7 +17,7 @@ export class ChecklistItemService {
     private readonly taskRepository: Repository<Task>,
   ) {}
 
-  async create(taskId: number, dto: CreateChecklistItemDto) {
+  async create(taskId: string, dto: CreateChecklistItemDto) {
     const taskExists = await this.taskRepository.existsBy({
       id: taskId,
     });
@@ -33,8 +33,8 @@ export class ChecklistItemService {
   }
 
   async update(
-    taskId: number,
-    id: number,
+    taskId: string,
+    id: string,
     dto: UpdateChecklistItemDto,
   ): Promise<void> {
     const result = await this.checklistRepository.update(
@@ -54,7 +54,7 @@ export class ChecklistItemService {
     }
   }
 
-  async delete(taskId: number, id: number): Promise<void> {
+  async delete(taskId: string, id: string): Promise<void> {
     const result = await this.checklistRepository.delete({
       id,
       task: { id: taskId },

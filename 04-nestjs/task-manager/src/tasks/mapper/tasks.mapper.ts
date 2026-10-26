@@ -1,31 +1,30 @@
 import { Task } from '../entities/tasks.entity';
 
-export interface TaskListItem {
-  id: number;
-  title: string;
-  description: string;
-  status: string;
-  createdBy: number;
+export interface BaseItem {
+  id: string;
   createdAt: Date;
   updatedAt: Date;
 }
 
-export interface TaskInfo {
-  id: number;
+export interface TaskListItem extends BaseItem {
+  title: string;
+  description: string;
+  status: string;
+  createdBy: string;
+}
+
+export interface TaskInfo extends BaseItem {
   title: string;
   description: string;
   status: string;
 
-  createdAt: Date;
-  updatedAt: Date;
-
   createdBy: {
-    id: number;
+    id: string;
     username: string;
   };
 
   checklistItems: {
-    id: number;
+    id: string;
     content: string;
     isCompleted: boolean;
   }[];

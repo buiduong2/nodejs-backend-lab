@@ -6,6 +6,7 @@ import {
   HttpStatus,
   Param,
   ParseIntPipe,
+  ParseUUIDPipe,
   Patch,
   Post,
   ValidationPipe,
@@ -23,7 +24,7 @@ export class ChecklistItemController {
 
   @Post()
   create(
-    @Param('taskId', ParseIntPipe) taskId: number,
+    @Param('taskId', ParseUUIDPipe) taskId: string,
     @Body(new ValidationPipe({ whitelist: true, transform: true }))
     dto: CreateChecklistItemDto,
   ) {
@@ -33,8 +34,8 @@ export class ChecklistItemController {
   @Patch(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   update(
-    @Param('taskId', ParseIntPipe) taskId: number,
-    @Param('id', ParseIntPipe) id: number,
+    @Param('taskId', ParseUUIDPipe) taskId: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body(new ValidationPipe({ whitelist: true, transform: true }))
     dto: UpdateChecklistItemDto,
   ) {
@@ -44,8 +45,8 @@ export class ChecklistItemController {
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   delete(
-    @Param('taskId', ParseIntPipe) taskId: number,
-    @Param('id', ParseIntPipe) id: number,
+    @Param('taskId', ParseUUIDPipe) taskId: string,
+    @Param('id', ParseUUIDPipe) id: string,
   ) {
     return this.checklistItemService.delete(taskId, id);
   }

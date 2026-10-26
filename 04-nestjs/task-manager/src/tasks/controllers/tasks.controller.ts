@@ -4,7 +4,7 @@ import {
   Delete,
   Get,
   Param,
-  ParseIntPipe,
+  ParseUUIDPipe,
   Patch,
   Post,
   Query,
@@ -36,7 +36,7 @@ export class TasksController {
 
   @UseGuards(ApiKeyGuard)
   @Get(':id')
-  getById(@Param('id', ParseIntPipe) id: number) {
+  getById(@Param('id', ParseUUIDPipe) id: string) {
     return this.taskService.findById(id);
   }
 
@@ -45,13 +45,13 @@ export class TasksController {
     @Body(new ValidationPipe({ whitelist: true, transform: true }))
     taskDto: CreateTaskDto,
   ) {
-    const userId: User['id'] = 1;
+    const userId: User['id'] = 'cdc80720-fdad-4d77-ac4c-1db2894c3232';
     return this.taskService.create(taskDto, userId);
   }
 
   @Patch(':id')
   public update(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseUUIDPipe) id:string,
     @Body(new ValidationPipe({ whitelist: true, transform: true }))
     taskDto: UpdateTaskDto,
   ) {
@@ -59,7 +59,7 @@ export class TasksController {
   }
 
   @Delete(':id')
-  public delete(@Param('id', ParseIntPipe) id: number) {
-    return this.taskService.delete(id);
+  public delete(@Param('id', ParseUUIDPipe) id: string) {
+      return this.taskService.delete(id);
   }
 }
