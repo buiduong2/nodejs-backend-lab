@@ -18,7 +18,7 @@ async function findById(id: number): Promise<Task> {
 async function create(req: CreateTaskDto): Promise<Task> {
 	const newTask = {
 		title: req.title,
-		desc: req.desc
+		description: req.description
 	}
 
 	return taskRepository.create(newTask)
@@ -28,7 +28,7 @@ async function update(id: number, dto: UpdateTaskDto): Promise<Task> {
 	const oldTask = await taskRepository.findById(id)
 	if (oldTask) {
 		oldTask.title = dto.title
-		oldTask.desc = dto.desc
+		oldTask.description = dto.description
 
 		return taskRepository.update(oldTask)
 	}

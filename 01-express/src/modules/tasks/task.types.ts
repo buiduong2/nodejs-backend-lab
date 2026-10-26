@@ -1,15 +1,15 @@
 export interface Task {
 	id: number
 	title: string
-	desc: string
+	description: string
 }
 
 export interface CreateTaskDto {
 	title: string
-	desc: string
+	description: string
 }
 
 export interface UpdateTaskDto {
 	title: string
-	desc: string
+	description: string
 }

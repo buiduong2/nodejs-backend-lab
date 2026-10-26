@@ -29,6 +29,9 @@ export class TaskData {
   status: TaskStatus;
 }
 
+// TODO: Task Đệ quy 
+// SELF JOIN 
+// Task 
 export class CreateTaskData extends TaskData {
   @IsOptional()
   @IsArray()

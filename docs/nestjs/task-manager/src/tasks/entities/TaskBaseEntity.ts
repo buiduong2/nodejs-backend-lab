@@ -5,6 +5,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
+// TODO: id: UUID
 export abstract class TaskBaseEntity {
   @PrimaryGeneratedColumn()
   id: number;

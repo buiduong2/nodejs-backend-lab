@@ -8,6 +8,7 @@ import {
   Patch,
   Post,
   Query,
+  UseGuards,
   ValidationPipe,
 } from '@nestjs/common';
 
@@ -19,6 +20,7 @@ import { Page } from '../../share/dto/page.dto';
 import { TaskListItem } from '../mapper/tasks.mapper';
 import { PaginationQueryDto } from '../../share/dto/pagination-query.dto';
 import { TaskQueryDto } from '../dtos/task-query.dto';
+import { ApiKeyGuard } from '../../share/guards/api-key.guard';
 
 @Controller('tasks')
 export class TasksController {
@@ -32,6 +34,7 @@ export class TasksController {
     return this.taskService.findAll(taskQueryDto);
   }
 
+  @UseGuards(ApiKeyGuard)
   @Get(':id')
   getById(@Param('id', ParseIntPipe) id: number) {
     return this.taskService.findById(id);

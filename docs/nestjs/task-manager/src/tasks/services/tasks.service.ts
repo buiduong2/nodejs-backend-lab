@@ -1,19 +1,21 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 
-import { Task } from '../entities/tasks.entity';
-import { CreateTaskDto } from '../dtos/create-task.dto';
-import { User } from '../../users/entities/user.entity';
-import { UpdateTaskDto } from '../dtos/update-task.dto';
-import { TaskListItem, TaskMapper } from '../mapper/tasks.mapper';
-import { PaginationQueryDto } from '../../share/dto/pagination-query.dto';
-import { parseSort } from '../../share/helper/parse-sort.helper';
 import { Page } from '../../share/dto/page.dto';
 import { buildPageMeta } from '../../share/helper/build-page-meta.helper';
+import { parseSort } from '../../share/helper/parse-sort.helper';
+import { User } from '../../users/entities/user.entity';
+import { CreateTaskDto } from '../dtos/create-task.dto';
 import { TaskQueryDto } from '../dtos/task-query.dto';
+import { UpdateTaskDto } from '../dtos/update-task.dto';
 import { ChecklistItem } from '../entities/checklist-item.entity';
-import { checkPrime } from 'crypto';
+import { Task } from '../entities/tasks.entity';
+import { TaskListItem, TaskMapper } from '../mapper/tasks.mapper';
 
 @Injectable()
 export class TasksService {
@@ -34,7 +36,12 @@ export class TasksService {
         },
       });
 
-  
+      
+    //   let a = true;
+    //   if (a) {
+    //     throw new BadRequestException();
+    //   }
+
       if (Array.isArray(taskDto.task.checklistItems)) {
         const checklistItems = await em.save(
           ChecklistItem,
@@ -53,8 +60,6 @@ export class TasksService {
 
       return TaskMapper.toInfo(task);
     });
-
-    
   }
 
   async update(id: number, taskDto: UpdateTaskDto) {
@@ -79,6 +84,11 @@ export class TasksService {
     const qb = this.taskRepository.createQueryBuilder('task');
     qb.leftJoinAndSelect('task.checklistItems', 'checklistItem');
 
+    // Dùng add SELECT tối ưu hơn như thế nào so với map response bằng code.
+
+    // chỉ select các trường
+    // Bớt đi công đoạn mapping
+
     qb.leftJoin('task.createdBy', 'user').addSelect([
       'user.id',
       'user.username',
@@ -96,6 +106,8 @@ export class TasksService {
 
     const { page, limit, search, sort } = taskQueryDto;
     const offset = (page - 1) * limit;
+
+    // createdAt,desc => {field: createdAt, driection: DESC}
     const sortOrders = parseSort(
       taskQueryDto.sort,
       TasksService.allowSortColumns,

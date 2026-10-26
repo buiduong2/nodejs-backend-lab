@@ -31,7 +31,7 @@ taskRouter.post('/', async (req, res) => {
 	if (!containField(reqBody , 'title', 'string')) {
 		throw new BadRequestError('Title is missing')
 	}
-	if (!containField(reqBody, 'desc', 'string')) {
+	if (!containField(reqBody, 'description', 'string')) {
 		throw new BadRequestError('Desc is missing')
 	}
 
@@ -53,7 +53,7 @@ taskRouter.put('/:id', async (req, res) => {
 	if (!containField(dto, 'title', 'string')) {
 		throw new BadRequestError('Title is missing')
 	}
-	if (!containField(dto, 'desc', 'string')) {
+	if (!containField(dto, 'description', 'string')) {
 		throw new BadRequestError('Desc is missing')
 	}
 	res.status(200).json(await taskService.update(id, dto))

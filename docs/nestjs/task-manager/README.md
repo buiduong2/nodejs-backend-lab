@@ -104,3 +104,48 @@ sort?:string;
 
 
 - Ta sẽ kiểm tra 
+
+## Bài tập 
+
+- Bổ sung: 1. Middleware — `RequestTrackingMiddleware`
+- 2. Guard — `ApiKeyGuard`
+  - Implmenet canACtive
+  - Ddojc x-api-key
+  - So sánh với giá trị cấu hình trong `.env` VD `DEMO_API_KEY`.
+  - Thiếu hoặc sai key -> `UnauthronizedExcpetion`
+  - Đúng API key -> cho phép request
+- 3. Interceptor - `RequestLoggingInterceptor`
+  - Before Controller: 
+    - in log Interceptor BEFORE
+    - Lấy `requestId` do middleware đã gắn vào request
+    - Ghi nhận thời điểm bắt đầu xử lý
+  - After Controller: 
+    - Đo thời gian xử lý: 
+    - in log `Interceptor AFTER`
+    - Bổ xung `requestId` vào response
+
+```json
+{
+  "data": {
+    "id": 1,
+    "title": "Learn NestJS",
+    "createdBy": {
+      "username": "testuser"
+    },
+    "checklistItems": []
+  },
+  "requestId": "abc-123"
+}
+```
+
+## 
+
+- Nghiệp vụ 
+  - Bussiness: Merchant
+    - NebyhL
+    - Đọc menus; 
+      - Options groups có các cấp như
+      - Item, optionm=,.optoins_grpuips: của Gorup khác và  của merchant và store khác nhau như nào và giống nhau như nào.
+      - Luồng Order: 
+        - order develery và order pickup khác nhau cốt lỗi 
+- NestJS : 

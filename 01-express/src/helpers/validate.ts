@@ -10,7 +10,7 @@ type JavaScriptTypeName =
 	| 'array'
 	| 'null'
 
-export function isObject(
+export function isTypeof(
     value: unknown,
     type: JavaScriptTypeName
 ): boolean {
