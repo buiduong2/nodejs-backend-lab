@@ -18,6 +18,8 @@ import { TaskQueryDto } from '../dtos/task-query.dto';
 import { UpdateTaskDto } from '../dtos/update-task.dto';
 import { TaskListItem } from '../mapper/tasks.mapper';
 import { TasksService } from '../services/tasks.service';
+import { LogAction } from '../../audit/log-action.decorator';
+import { AUDIT_LOG_OPERATION } from '../../audit/audit.constrant';
 
 @Controller('tasks')
 export class TasksController {
@@ -45,6 +47,12 @@ export class TasksController {
     return this.taskService.create(taskDto, userId);
   }
 
+  @LogAction({
+    entity: 'task',
+    entityIdPath: 'id',
+    entityIdSource: 'params',
+    operation: AUDIT_LOG_OPERATION.UPDATE,
+  })
   @Patch(':id')
   public update(
     @Param('id', ParseUUIDPipe) id: string,

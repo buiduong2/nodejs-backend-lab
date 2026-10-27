@@ -1,0 +1,5 @@
+export enum AUDIT_LOG_OPERATION {
+  CREATE = 'CREATE',
+  UPDATE = 'UPDATE',
+  DELETE = 'DELETE',
+}

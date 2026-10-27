@@ -17,6 +17,7 @@ import { RequestLoggingInterceptor } from './share/interceptors/request-logging.
 import { coloredTextFormatter, ConsoleSink, LoggingModule } from 'nest-logging';
 import { MongoLoggingModule, MongoSink } from 'nest-logging/mongo';
 import { AuthModule } from './auth/auth.module';
+import { AuditModule } from './audit/audit.module';
 
 
 @Module({
@@ -58,6 +59,7 @@ import { AuthModule } from './auth/auth.module';
     TasksModule,
     UsersModule,
     AuthModule,
+    AuditModule,
   ],
   controllers: [AppController],
   providers: [
