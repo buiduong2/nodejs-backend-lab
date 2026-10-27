@@ -16,10 +16,12 @@ import { Observable } from 'rxjs';
 export class ApiKeyGuard implements CanActivate {
   constructor(private readonly configService: ConfigService) {}
 
+
   canActivate(
     context: ExecutionContext,
   ): boolean | Promise<boolean> | Observable<boolean> {
     const httpContext = context.switchToHttp();
+    
     const request = httpContext.getRequest<Request>();
     const apiKey = request.headers['x-api-key'];
     const expectedApiKey = this.configService.get<string>('API_KEY');

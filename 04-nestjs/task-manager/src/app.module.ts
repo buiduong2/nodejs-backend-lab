@@ -14,7 +14,10 @@ import { RequestTrakcingMiddleware } from './share/middlewares/request-tracking.
 import { ApiKeyGuard } from './share/guards/api-key.guard';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { RequestLoggingInterceptor } from './share/interceptors/request-logging.interceptor';
-import { LoggingModule } from 'nest-logging';
+import { coloredTextFormatter, ConsoleSink, LoggingModule } from 'nest-logging';
+import { MongoLoggingModule, MongoSink } from 'nest-logging/mongo';
+import { AuthModule } from './auth/auth.module';
+
 
 @Module({
   imports: [
@@ -37,9 +40,24 @@ import { LoggingModule } from 'nest-logging';
     LoggingModule.forRoot({
       httpContext: true,
       level: 'info',
+    //   imports: [
+    //     MongoLoggingModule.forRoot({
+    //       uri: process.env?.MONGO_URI!,
+    //       database: 'nestjs_log',
+    //       collection: 'logs',
+    //     }),
+    //   ],
+    //   providers: [
+    //     {
+    //       provide: ConsoleSink,
+    //       useValue: new ConsoleSink(coloredTextFormatter),
+    //     },
+    //   ],
+    //   sinks: [ConsoleSink, MongoSink],
     }),
     TasksModule,
     UsersModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [

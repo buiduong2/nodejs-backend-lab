@@ -8,19 +8,16 @@ import {
   Patch,
   Post,
   Query,
-  UseGuards,
   ValidationPipe,
 } from '@nestjs/common';
 
+import { Page } from '../../share/dto/page.dto';
 import { User } from '../../users/entities/user.entity';
 import { CreateTaskDto } from '../dtos/create-task.dto';
-import { UpdateTaskDto } from '../dtos/update-task.dto';
-import { TasksService } from '../services/tasks.service';
-import { Page } from '../../share/dto/page.dto';
-import { TaskListItem } from '../mapper/tasks.mapper';
-import { PaginationQueryDto } from '../../share/dto/pagination-query.dto';
 import { TaskQueryDto } from '../dtos/task-query.dto';
-import { ApiKeyGuard } from '../../share/guards/api-key.guard';
+import { UpdateTaskDto } from '../dtos/update-task.dto';
+import { TaskListItem } from '../mapper/tasks.mapper';
+import { TasksService } from '../services/tasks.service';
 
 @Controller('tasks')
 export class TasksController {
@@ -34,7 +31,6 @@ export class TasksController {
     return this.taskService.findAll(taskQueryDto);
   }
 
-  @UseGuards(ApiKeyGuard)
   @Get(':id')
   getById(@Param('id', ParseUUIDPipe) id: string) {
     return this.taskService.findById(id);
@@ -51,7 +47,7 @@ export class TasksController {
 
   @Patch(':id')
   public update(
-    @Param('id', ParseUUIDPipe) id:string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body(new ValidationPipe({ whitelist: true, transform: true }))
     taskDto: UpdateTaskDto,
   ) {
@@ -60,6 +56,6 @@ export class TasksController {
 
   @Delete(':id')
   public delete(@Param('id', ParseUUIDPipe) id: string) {
-      return this.taskService.delete(id);
+    return this.taskService.delete(id);
   }
 }
