@@ -41,25 +41,25 @@ import { AuditModule } from './audit/audit.module';
     LoggingModule.forRoot({
       httpContext: true,
       level: 'info',
-    //   imports: [
-    //     MongoLoggingModule.forRoot({
-    //       uri: process.env?.MONGO_URI!,
-    //       database: 'nestjs_log',
-    //       collection: 'logs',
-    //     }),
-    //   ],
-    //   providers: [
-    //     {
-    //       provide: ConsoleSink,
-    //       useValue: new ConsoleSink(coloredTextFormatter),
-    //     },
-    //   ],
-    //   sinks: [ConsoleSink, MongoSink],
+      imports: [
+        MongoLoggingModule.forRoot({
+          uri: process.env?.MONGO_URI!,
+          database: 'nestjs_log',
+          collection: 'logs',
+        }),
+      ],
+      providers: [
+        {
+          provide: ConsoleSink,
+          useValue: new ConsoleSink(coloredTextFormatter),
+        },
+      ],
+      sinks: [ConsoleSink, MongoSink],
     }),
     TasksModule,
     UsersModule,
     AuthModule,
-    AuditModule,
+    // AuditModule,
   ],
   controllers: [AppController],
   providers: [

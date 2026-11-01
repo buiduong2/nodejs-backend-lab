@@ -1,4 +1,4 @@
-import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
+import { Column, Entity, Index, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
 import { TaskBaseEntity } from './TaskBaseEntity';
 import { User } from '../../users/entities/user.entity';
 import { ChecklistItem } from './checklist-item.entity';
@@ -9,6 +9,7 @@ export enum TaskStatus {
   DONE = 'DONE',
 }
 
+
 @Entity('tasks')
 export class Task extends TaskBaseEntity {
   @Column({ type: 'varchar', length: 150 })
@@ -16,11 +17,13 @@ export class Task extends TaskBaseEntity {
 
   @Column({ type: 'text', nullable: true })
   description: string | null;
-
+// 
+  @Index("idx_tasks_status")
   @Column({
     type: 'enum',
     enum: TaskStatus,
     default: TaskStatus.TODO,
+    
   })
   status: TaskStatus;
 

@@ -20,6 +20,7 @@ import { TaskListItem } from '../mapper/tasks.mapper';
 import { TasksService } from '../services/tasks.service';
 import { LogAction } from '../../audit/log-action.decorator';
 import { AUDIT_LOG_OPERATION } from '../../audit/audit.constrant';
+import { CheckResourceAccess } from '../../auth/decorators/check-resource-access.decorator';
 
 @Controller('tasks')
 export class TasksController {
@@ -33,6 +34,10 @@ export class TasksController {
     return this.taskService.findAll(taskQueryDto);
   }
 
+  @CheckResourceAccess({
+    resource: 'task',
+    paramKey: 'id',
+  })
   @Get(':id')
   getById(@Param('id', ParseUUIDPipe) id: string) {
     return this.taskService.findById(id);

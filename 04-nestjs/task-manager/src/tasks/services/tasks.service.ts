@@ -43,6 +43,8 @@ export class TasksService {
     private readonly logger: NestLogger,
   ) {}
 
+  // TODO: Lưu tất cả HTTP request. 
+  // 
   create(taskDto: CreateTaskDto, userId: User['id']) {
     this.logger.info(`do func create  userId=${userId}`);
     return this.dataSource.transaction(async (em) => {

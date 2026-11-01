@@ -1,3 +1,6 @@
+-- TTẠo một cột ID mới
+
+
 -- BEGIN;
 
 -- Thêm 5 cột DDL UUID_future ID tương tứng
