@@ -3,6 +3,7 @@ import { Hono } from 'hono'
 import { zValidator } from '@hono/zod-validator'
 import {
 	CreateEventSchema,
+	CreateTypeTicketSchema,
 	queryEventSchema,
 	UpdateEventSchema
 } from './events.schema.js'
@@ -37,6 +38,44 @@ export const eventsRouter = new Hono()
 				await eventService.update(
 					c.req.valid('param').id,
 					c.req.valid('json')
+				)
+			)
+		}
+	)
+
+	// event-type
+	.post(
+		'/:eventId/ticket-types',
+		validateBody(CreateTypeTicketSchema),
+		zValidator(
+			'param',
+			z.object({ eventId: z.coerce.number().positive().int() })
+		),
+		async c => {
+			const eventId = c.req.valid('param').eventId
+			const createTypeTicketDTO = c.req.valid('json')
+
+			return c.json(
+				await eventService.createTypeTicket(
+					eventId,
+					createTypeTicketDTO
+				)
+			)
+		}
+	)
+
+	.get(
+		'/:eventId/ticket-types',
+		zValidator(
+			'param',
+			z.object({ eventId: z.coerce.number().positive().int() })
+		),
+		async c => {
+			const eventId = c.req.valid('param').eventId
+
+			return c.json(
+				await eventService.findAllTicketTypesByEventId(
+					eventId
 				)
 			)
 		}

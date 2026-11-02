@@ -22,4 +22,6 @@ export const ticketTypes = pgTable('ticket_types', {
 		.$onUpdate(() => new Date())
 })
 
+export type TicketType = typeof ticketTypes.$inferSelect
+
 export default ticketTypes

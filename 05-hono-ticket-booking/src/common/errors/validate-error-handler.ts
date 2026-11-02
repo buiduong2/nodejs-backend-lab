@@ -5,16 +5,19 @@ export const validateErrorHandle: Parameters<typeof zValidator>[2] = (
 	c
 ) => {
 	if (!result.success) {
-		return c.json({
-			success: false,
-			error: {
-				status: 400,
-				message: 'validation failed',
-				details: result.error.issues.map(issue => ({
-					field: issue.path.join(','),
-					message: issue.message
-				}))
-			}
-		})
+		return c.json(
+			{
+				success: false,
+				error: {
+					status: 400,
+					message: 'validation failed',
+					details: result.error.issues.map(issue => ({
+						field: issue.path.join(','),
+						message: issue.message
+					}))
+				}
+			},
+			{ status: 400 }
+		)
 	}
 }

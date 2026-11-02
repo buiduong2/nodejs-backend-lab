@@ -34,3 +34,9 @@ export const UpdateEventSchema = z
 	.refine(obj => Object.keys(obj).length > 0, {
 		message: 'Object must contain at least one key-value pair'
 	})
+
+export const CreateTypeTicketSchema = z.object({
+    name: z.string().max(255).min(1).nonempty(),
+    price: z.number().positive().int(),
+    quantity: z.number().positive().int()
+})
