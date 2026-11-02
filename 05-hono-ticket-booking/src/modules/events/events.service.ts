@@ -5,10 +5,10 @@ import { db } from '../../index.js'
 import type { Page } from '../../types/page.types.js'
 
 import type { CreateEventDTO, EventQuery } from './events.schema.js'
-type Event = typeof events.$inferSelect;
+import { HTTPException } from 'hono/http-exception'
+type Event = typeof events.$inferSelect
 
 export async function create(dto: CreateEventDTO) {
-
 	const result = await db
 		.insert(events)
 		.values({
@@ -43,7 +43,7 @@ export async function findAll(query: EventQuery): Promise<Page<Event>> {
 export async function findById(id: number): Promise<Event> {
 	const result = await db.select().from(events).where(eq(events.id, id))
 	if (result.length !== 1) {
-		throw new Error('Resource Not found')
+		throw new HTTPException(404, { message: 'Resource Not found' })
 	}
 
 	return result[0]
@@ -64,7 +64,7 @@ export async function update(
 		.returning()
 
 	if (result.length !== 1) {
-		throw new Error('resource not found')
+		throw new HTTPException(404, { message: 'Resource Not found' })
 	}
 
 	return result[0]

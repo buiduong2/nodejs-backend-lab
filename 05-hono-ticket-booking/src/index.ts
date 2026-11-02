@@ -6,6 +6,7 @@ import { eventsRouter } from './modules/events/events.route.js'
 import pg from 'pg'
 import 'dotenv/config'
 import * as schema from './db/schema/index.js'
+import { errorHandler, notFoundHandler } from './common/errors/error-handler.js'
 const { Pool } = pg
 
 export const pool = new Pool({
@@ -20,6 +21,9 @@ app.get('/', c => {
 })
 
 app.route('/events', eventsRouter)
+
+app.onError(errorHandler)
+app.notFound(notFoundHandler)
 
 serve(
 	{
