@@ -1,24 +1,25 @@
 import { serve } from '@hono/node-server'
 import { zValidator } from '@hono/zod-validator'
 import { Hono } from 'hono'
-import { drizzle } from 'drizzle-orm/node-postgres';
-import { eventsRouter } from './modules/events/events.route.js';
-import pg from 'pg';
-
-const { Pool } = pg;
+import { drizzle } from 'drizzle-orm/node-postgres'
+import { eventsRouter } from './modules/events/events.route.js'
+import pg from 'pg'
+import 'dotenv/config'
+import * as schema from './db/schema/index.js'
+const { Pool } = pg
 
 export const pool = new Pool({
-  connectionString: process.env.DATABASE_URL!,
-});
-
-export const db = drizzle({ client: pool });const app = new Hono()
-
-app.get('/', (c) => {
-  return c.text('Hello Hono!')
+	connectionString: process.env.DATABASE_URL!
 })
 
-app.route('/events', eventsRouter);
+export const db = drizzle({ client: pool, schema })
+const app = new Hono()
 
+app.get('/', c => {
+	return c.text('Hello Hono!')
+})
+
+app.route('/events', eventsRouter)
 
 serve(
 	{

@@ -38,3 +38,8 @@ app.post(
 
 - `zValidator('json', createEventSchema)`: kiểm tra JSON body trước khi handler được chạy
 - `c.req.valid('json')`: Trả dữ liệu đã validaet và được typesript suy luận kiểu tương ứng
+
+
+### Các bước thực thi theo thứ tự khai báo 
+-
+ 
