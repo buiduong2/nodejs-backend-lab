@@ -18,11 +18,13 @@ async function bootstrap() {
       consumer: {
         groupId: config.getOrThrow<string>('KAFKA_GROUP_ID'),
       },
+      subscribe: {
+        fromBeginning: true,
+      },
     },
   });
 
   await app.listen(Number(config.getOrThrow<string>('PORT')));
   await app.startAllMicroservices();
 }
-void bootstrap();
 void bootstrap();

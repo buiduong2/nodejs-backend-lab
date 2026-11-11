@@ -1,10 +1,33 @@
 import { Controller, Inject } from '@nestjs/common';
-import { ClientKafka } from '@nestjs/microservices';
+import {
+  ClientKafka,
+  Ctx,
+  EventPattern,
+  KafkaContext,
+  Payload,
+} from '@nestjs/microservices';
+import {
+  INVENTORY_RESERVE_COMMAND,
+  INVENTORY_RESERVE_EVENT,
+  type ReserveInventoryCommand,
+} from './order.type';
+import { OrderService } from './order.service';
 
 @Controller('order')
 export class OrderController {
-  @Inject('KAFKA_PRODUCER')
-  client: ClientKafka;
+  constructor(
+    @Inject('ORDER_SAGA_PRODUCER')
+    private client: ClientKafka,
+    private readonly orderService: OrderService,
+  ) {}
 
-  
+  @EventPattern(INVENTORY_RESERVE_COMMAND)
+  async killDragon(
+    @Payload() message: ReserveInventoryCommand,
+    @Ctx() context: unknown,
+  ) {
+    const kafkaContext = context as KafkaContext;
+
+    await this.orderService.reserveInventory(message);
+  }
 }
