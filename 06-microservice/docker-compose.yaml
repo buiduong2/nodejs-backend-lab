@@ -1,0 +1,65 @@
+name: nestjs-order-saga
+
+services:
+  kafka:
+    image: apache/kafka:4.1.2
+    hostname: kafka
+    ports:
+      - "9092:9092"
+    environment:
+      # Single-node KRaft (no ZooKeeper)
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9091
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENERS: CONTROLLER://localhost:9091,HOST://0.0.0.0:9092,DOCKER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: HOST://localhost:9092,DOCKER://kafka:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,HOST:PLAINTEXT,DOCKER:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: DOCKER
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092 >/dev/null 2>&1"]
+      interval: 10s
+      timeout: 10s
+      retries: 12
+      start_period: 20s
+    restart: unless-stopped
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    ports:
+      - "8080:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9093
+    depends_on:
+      kafka:
+        condition: service_healthy
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:17-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: saga
+      POSTGRES_PASSWORD: saga_dev_password
+      POSTGRES_DB: saga_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U saga -d saga_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  kafka_data:
+  postgres_data:
