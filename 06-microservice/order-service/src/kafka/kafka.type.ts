@@ -47,6 +47,9 @@ export type ReservationResult =
 export type ReservationSuccessResult = { success: true } & ReservationResult;
 export type ReservatinFailedResult = { success: false } & ReservationResult;
 
+
+export interface InventoryReleaseCommand extends MessageEnvelop<'command',ReserveInventoryPayload>{}
+
 // ==== Payment
 export interface PaymentChargeCommand extends MessageEnvelop<
   'command',
@@ -59,6 +62,11 @@ export interface PaymentChargePayload {
   totalAmount: string;
 }
 
+export interface PaymentChargeEvent extends MessageEnvelop<
+  'event',
+  { paymentId: string; success: boolean }
+> {}
+
 // ==== Order Event
 export interface OrderCompensatedEvent extends MessageEnvelop<
   'event',
@@ -66,4 +74,9 @@ export interface OrderCompensatedEvent extends MessageEnvelop<
     orderId: string;
     customerId: string;
   }
+> {}
+
+export interface OrderConfirmedEvent extends MessageEnvelop<
+  'event',
+  { orderId: string; customerId: string }
 > {}

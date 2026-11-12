@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
-import { OrderService } from './order.service';
-import { OrderController } from './order.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Order } from './order.entity';
 import { SagaModule } from '../saga/saga.module';
+import { OrderController } from './order.controller';
+import { Order } from './order.entity';
+import { OrderService } from './order.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Order]), SagaModule],

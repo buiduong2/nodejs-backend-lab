@@ -5,8 +5,10 @@ import {
   MessagePattern,
   Payload,
 } from '@nestjs/microservices';
-import { INVENTORY_RESERVE_EVENT } from './saga.topic';
+import { INVENTORY_RESERVE_EVENT, PAYMENT_CHARGE_EVENT } from './saga.topic';
 import {
+  type PaymentChargeEvent,
+  type PaymentChargePayload,
   type InventoryReservationEvent,
   type ReservationResult,
 } from '../kafka/kafka.type';
@@ -27,6 +29,18 @@ export class SagaController {
       this.sagaService.handleInventoryReserveSuccess(message);
     } else {
       this.sagaService.handleInventoryReserveFailed(message);
+    }
+  }
+
+  @MessagePattern(PAYMENT_CHARGE_EVENT)
+  handlePaymentChargeEvent(
+    @Payload() message: PaymentChargeEvent,
+    @Ctx() context: unknown,
+  ) {
+    if (message.payload.success) {
+      this.sagaService.handlePaymentChargeSuccessEvent(message);
+    } else {
+      this.sagaService.handlePaymentChargeFailedEvent(message);
     }
   }
 }

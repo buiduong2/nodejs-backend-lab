@@ -4,6 +4,7 @@ import {
   Ctx,
   EventPattern,
   KafkaContext,
+  MessagePattern,
   Payload,
 } from '@nestjs/microservices';
 import {
@@ -22,7 +23,7 @@ export class OrderController {
   ) {}
 
   @EventPattern(INVENTORY_RESERVE_COMMAND)
-  async killDragon(
+  async handleInventoryReserveCommand(
     @Payload() message: ReserveInventoryCommand,
     @Ctx() context: unknown,
   ) {
@@ -30,4 +31,7 @@ export class OrderController {
 
     await this.orderService.reserveInventory(message);
   }
+
+
+
 }

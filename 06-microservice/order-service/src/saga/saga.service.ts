@@ -4,17 +4,21 @@ import { randomUUID } from 'crypto';
 import { firstValueFrom } from 'rxjs';
 import { DataSource, EntityManager } from 'typeorm';
 import {
+  InventoryReleaseCommand,
   InventoryReservateSuccessEvent,
   InventoryReserveFailedEvent,
   MessageEnvelop,
   OrderCompensatedEvent,
+  OrderConfirmedEvent,
   PaymentChargeCommand,
+  PaymentChargeEvent,
   ReservatinFailedResult as ReservationFailedResult,
   ReservationSuccessResult,
   ReserveInventoryCommand,
 } from '../kafka/kafka.type';
 import { Order, OrderStatus } from '../order/order.entity';
 import {
+  INVENTORY_RELEASE_COMMAND,
   INVENTORY_RESERVE_COMMAND,
   ORDER_EVENT,
   PAYMENT_CHARGE_COMMAND,
@@ -189,4 +193,111 @@ export class SagaService {
 
     return [order, saga] satisfies [Order, Saga];
   }
+
+  async handlePaymentChargeSuccessEvent(message: PaymentChargeEvent) {
+    this.logger.debug(
+      `[Order-${message.orderId}]: received event Charge Payment Success`,
+    );
+    const [order, saga] = await this.datasource.manager.transaction(
+      async (tx) => {
+        const [order, saga] = await this.getOrderAndSagaWithLock(tx, message);
+
+        if (!(
+          order.status === OrderStatus.PAYMENT_PENDING &&
+          saga.status === SagaStatus.RUNNING &&
+          saga.currentStep === SagaStep.CHARGE_PAYMENT
+        )) {
+          // idempotent & late message
+          return [order, saga];
+        }
+
+        saga.currentStep = SagaStep.COMPLETED;
+        order.status = OrderStatus.CONFIRMED;
+
+        await tx.save([order, saga]);
+
+        return [order, saga];
+      },
+    );
+
+    await this.publishOrderConfirmedEvent(order, saga);
+    this.logger.debug(
+      `[Order-${message.orderId}]: publish event order Confirmed. Create Order Done`,
+    );
+  }
+
+  async publishOrderConfirmedEvent(order: Order, saga: Saga) {
+    const event: OrderConfirmedEvent = {
+      messsageId: randomUUID(),
+      occurredAt: new Date().toISOString(),
+      orderId: order.id,
+      payload: { orderId: order.id, customerId: order.customerId },
+      sagaId: saga.id,
+      type: 'event',
+    };
+
+    await firstValueFrom(
+      this.kafkaClient.emit(ORDER_EVENT, { key: order.id, value: event }),
+    );
+  }
+
+  async handlePaymentChargeFailedEvent(message: PaymentChargeEvent) {
+    this.logger.debug(
+      `[Order-${message.orderId}]: received event Charge Payment Failed`,
+    );
+
+    const [order, saga] = await this.datasource.manager.transaction(
+      async (tx) => {
+        const [order, saga] = await this.getOrderAndSagaWithLock(tx, message);
+
+        if (!(
+          order.status === OrderStatus.PAYMENT_PENDING &&
+          saga.status === SagaStatus.RUNNING &&
+          saga.currentStep === SagaStep.CHARGE_PAYMENT
+        )) {
+          // idempotent & late message
+          return [order, saga];
+        }
+
+        saga.currentStep = SagaStep.RELEASE_INVENTORY;
+        order.status = OrderStatus.REJECTED;
+
+        await tx.save([saga, order]);
+
+        return [order, saga];
+      },
+    );
+
+    await this.publishInventoryReleaseCommand(order, saga);
+
+        this.logger.debug(
+      `[Order-${message.orderId}]: Publish command Release Command`,
+    );
+
+  }
+
+  async publishInventoryReleaseCommand(order: Order, saga: Saga) {
+    const command: InventoryReleaseCommand = {
+      messsageId: randomUUID(),
+      occurredAt: new Date().toISOString(),
+      orderId: order.id,
+      payload: {
+        items: order.items.map((i) => ({
+          productId: i.productId,
+          quantity: i.quantity,
+        })),
+      },
+      sagaId: saga.id,
+      type: 'command',
+    };
+
+    await firstValueFrom(
+      this.kafkaClient.emit(INVENTORY_RELEASE_COMMAND, {
+        key: order.id,
+        value: command,
+      }),
+    );
+  }
+
+  
 }
