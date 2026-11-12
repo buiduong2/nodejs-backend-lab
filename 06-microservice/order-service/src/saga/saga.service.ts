@@ -8,22 +8,25 @@ import {
   InventoryReleaseSuccessEvent,
   InventoryReservateSuccessEvent,
   InventoryReserveFailedEvent,
-  MessageEnvelop,
+  MessageEnvelope,
+
   OrderCompensatedEvent,
+
   OrderConfirmedEvent,
+
   PaymentChargeCommand,
   PaymentChargeEvent,
   ReservatinFailedResult as ReservationFailedResult,
   ReservationSuccessResult,
   ReserveInventoryCommand,
-} from '../kafka/kafka.type';
+} from '@saga/contracts';
 import { Order, OrderStatus } from '../order/order.entity';
 import {
   INVENTORY_RELEASE_COMMAND,
   INVENTORY_RESERVE_COMMAND,
   ORDER_EVENT,
   PAYMENT_CHARGE_COMMAND,
-} from './saga.topic';
+} from '@saga/contracts';
 import { Saga, SagaStatus, SagaStep } from './saga.entity';
 
 @Injectable()
@@ -49,7 +52,7 @@ export class SagaService {
 
   async publishReserveInventoryMessage(order: Order, saga: Saga) {
     const reserveInventoryCmd: ReserveInventoryCommand = {
-      messsageId: randomUUID(),
+      messageId: randomUUID(),
       occurredAt: new Date().toISOString(),
       orderId: order.id,
       payload: {
@@ -106,7 +109,7 @@ export class SagaService {
 
   async publishOrderCompensatedEvent(order: Order, saga: Saga) {
     const message: OrderCompensatedEvent = {
-      messsageId: randomUUID(),
+      messageId: randomUUID(),
       occurredAt: new Date().toISOString(),
       orderId: order.id,
       payload: {
@@ -155,7 +158,7 @@ export class SagaService {
 
   async publishPaymentChargeCommand(order: Order, saga: Saga) {
     const message: PaymentChargeCommand = {
-      messsageId: randomUUID(),
+      messageId: randomUUID(),
       occurredAt: new Date().toISOString(),
       orderId: order.id,
       payload: {
@@ -179,7 +182,7 @@ export class SagaService {
 
   async getOrderAndSagaWithLock<P>(
     tx: EntityManager,
-    message: MessageEnvelop<string, P>,
+    message: MessageEnvelope<string, P>,
   ) {
     const [order, saga] = await Promise.all([
       tx.findOne(Order, {
@@ -234,7 +237,7 @@ export class SagaService {
 
   async publishOrderConfirmedEvent(order: Order, saga: Saga) {
     const event: OrderConfirmedEvent = {
-      messsageId: randomUUID(),
+      messageId: randomUUID(),
       occurredAt: new Date().toISOString(),
       orderId: order.id,
       payload: { orderId: order.id, customerId: order.customerId },
@@ -284,7 +287,7 @@ export class SagaService {
 
   async publishInventoryReleaseCommand(order: Order, saga: Saga) {
     const command: InventoryReleaseCommand = {
-      messsageId: randomUUID(),
+      messageId: randomUUID(),
       occurredAt: new Date().toISOString(),
       orderId: order.id,
       payload: {

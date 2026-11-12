@@ -1,0 +1,8 @@
+{
+    "name": "order-processing-saga",
+    "private": true,
+    "scripts": {
+        "dev": "pnpm --parallel --filter order-service --filter inventory-service --filter payment-service run start:dev",
+        "build": "pnpm --filter @saga/contracts build && pnpm --filter './*-service' build"
+    }
+}

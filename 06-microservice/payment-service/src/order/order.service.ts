@@ -1,11 +1,11 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { PaymentChargeCommand, PaymentChargeEvent } from './saga.type';
+import { PaymentChargeCommand, PaymentChargeEvent } from '@saga/contracts';
 import { PaymentService } from '../payment/payment.service';
 import { DataSource } from 'typeorm';
 import { Payment, PaymentStatus } from '../payment/payment.entity';
 import { ClientKafka } from '@nestjs/microservices';
 import { randomUUID } from 'crypto';
-import { PAYMENT_CHARGE_EVENT } from './saga.topic';
+import { PAYMENT_CHARGE_EVENT } from '@saga/contracts';
 import { firstValueFrom } from 'rxjs';
 
 @Injectable()
@@ -33,7 +33,7 @@ export class OrderService {
 
   async publishPaymentChargeEvent(payment: Payment, success: boolean) {
     const event: PaymentChargeEvent = {
-      messsageId: randomUUID(),
+      messageId: randomUUID(),
       occurredAt: new Date().toISOString(),
       orderId: payment.orderId,
       payload: { paymentId: payment.id, success },

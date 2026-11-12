@@ -4,7 +4,7 @@ import {
   InventoryReservateSuccessEvent,
   InventoryReserveFailedEvent,
   ReserveInventoryCommand,
-} from './order.type';
+} from '@saga/contracts';
 import { ProductService } from '../product/product.service';
 import { ClientKafka } from '@nestjs/microservices';
 import { randomUUID } from 'crypto';
@@ -12,7 +12,7 @@ import { firstValueFrom } from 'rxjs';
 import {
   INVENTORY_RELEASE_EVENT,
   INVENTORY_RESERVE_EVENT,
-} from './order.topic';
+} from '@saga/contracts';
 
 @Injectable()
 export class OrderService {
@@ -31,7 +31,7 @@ export class OrderService {
 
     const responseMessage:
       InventoryReserveFailedEvent | InventoryReservateSuccessEvent = {
-      messsageId: randomUUID(),
+      messageId: randomUUID(),
       occurredAt: new Date().toISOString(),
       orderId: message.orderId,
       payload: result,
@@ -66,7 +66,7 @@ export class OrderService {
       await this.productService.releaseReservation(message);
 
     const event: InventoryReleaseSuccessEvent = {
-      messsageId: randomUUID(),
+      messageId: randomUUID(),
       occurredAt: new Date().toISOString(),
       orderId: message.orderId,
       payload: { reservationId: productReservation.id },

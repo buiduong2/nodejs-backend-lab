@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { KafkaModule } from './kafka/kafka.module';
 import { OrderModule } from './order/order.module';
 import { SagaModule } from './saga/saga.module';
 
@@ -25,7 +24,6 @@ import { SagaModule } from './saga/saga.module';
         synchronize: false,
       }),
     }),
-    KafkaModule,
     OrderModule,
     SagaModule,
   ],

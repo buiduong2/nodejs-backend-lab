@@ -4,13 +4,13 @@ import {
   type InventoryReleaseSuccessEvent,
   type InventoryReservationEvent,
   type PaymentChargeEvent,
-} from '../kafka/kafka.type';
+} from '@saga/contracts';
 import { SagaService } from './saga.service';
 import {
   INVENTORY_RELEASE_EVENT,
   INVENTORY_RESERVE_EVENT,
   PAYMENT_CHARGE_EVENT,
-} from './saga.topic';
+} from '@saga/contracts';
 
 @Controller('saga')
 export class SagaController {

@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import {
   ReservationResult,
   ReserveInventoryCommand,
-} from '../order/order.type';
+} from '@saga/contracts';
 import { EntityManager, In, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Product } from './product.entity';

@@ -1,5 +1,5 @@
 import { ConflictException, HttpException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
-import { PaymentChargeCommand } from '../order/saga.type';
+import { PaymentChargeCommand } from '@saga/contracts';
 import { Payment, PaymentStatus } from './payment.entity';
 import { EntityManager, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';

@@ -1,0 +1,7 @@
+packages:
+  - 'order-service'
+  - 'inventory-service'
+  - 'payment-service'
+  - 'packages/*'
+allowBuilds:
+  '@parcel/watcher': true

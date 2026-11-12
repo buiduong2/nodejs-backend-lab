@@ -7,11 +7,11 @@ import {
   Payload,
 } from '@nestjs/microservices';
 import { OrderService } from './order.service';
-import { type ReserveInventoryCommand } from './order.type';
+import { type ReserveInventoryCommand } from '@saga/contracts';
 import {
   INVENTORY_RELEASE_COMMAND,
   INVENTORY_RESERVE_COMMAND,
-} from './order.topic';
+} from '@saga/contracts';
 
 @Controller('order')
 export class OrderController {
