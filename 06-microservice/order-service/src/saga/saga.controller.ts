@@ -1,29 +1,22 @@
 import { Controller } from '@nestjs/common';
+import { Ctx, EventPattern, Payload } from '@nestjs/microservices';
 import {
-  Ctx,
-  KafkaContext,
-  MessagePattern,
-  Payload,
-} from '@nestjs/microservices';
+  type InventoryReleaseSuccessEvent,
+  type InventoryReservationEvent,
+  type PaymentChargeEvent,
+} from '../kafka/kafka.type';
+import { SagaService } from './saga.service';
 import {
   INVENTORY_RELEASE_EVENT,
   INVENTORY_RESERVE_EVENT,
   PAYMENT_CHARGE_EVENT,
 } from './saga.topic';
-import {
-  type PaymentChargeEvent,
-  type PaymentChargePayload,
-  type InventoryReservationEvent,
-  type ReservationResult,
-  type InventoryReleaseSuccessEvent,
-} from '../kafka/kafka.type';
-import { SagaService } from './saga.service';
 
 @Controller('saga')
 export class SagaController {
   constructor(private readonly sagaService: SagaService) {}
 
-  @MessagePattern(INVENTORY_RESERVE_EVENT)
+  @EventPattern(INVENTORY_RESERVE_EVENT)
   async handleInventoryReserveEvent(
     @Payload() message: InventoryReservationEvent,
     @Ctx() context: unknown,
@@ -37,7 +30,7 @@ export class SagaController {
     }
   }
 
-  @MessagePattern(PAYMENT_CHARGE_EVENT)
+  @EventPattern(PAYMENT_CHARGE_EVENT)
   async handlePaymentChargeEvent(
     @Payload() message: PaymentChargeEvent,
     @Ctx() context: unknown,
@@ -49,7 +42,7 @@ export class SagaController {
     }
   }
 
-  @MessagePattern(INVENTORY_RELEASE_EVENT)
+  @EventPattern(INVENTORY_RELEASE_EVENT)
   async handleInventoryReleaseEvent(
     @Payload() message: InventoryReleaseSuccessEvent,
     @Ctx() context: unknown,

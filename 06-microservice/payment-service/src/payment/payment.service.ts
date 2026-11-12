@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { ConflictException, HttpException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { PaymentChargeCommand } from '../order/saga.type';
 import { Payment, PaymentStatus } from './payment.entity';
 import { EntityManager, Repository } from 'typeorm';
@@ -25,26 +25,35 @@ export class PaymentService {
     return tx.save(raw);
   }
 
-  async charge(orderId: string, action: string): Promise<Payment> {
+  async charge(orderId: string, action: 'pay' | 'reject'): Promise<Payment> {
     return this.paymentRepository.manager.transaction(async (tx) => {
       const payment = await tx.findOne(Payment, {
-        where: { orderId: orderId },
+        where: { orderId },
         lock: { mode: 'pessimistic_write' },
       });
 
       if (!payment) {
-        throw new HttpException('NOT_FOUND', HttpStatus.NOT_FOUND);
+        throw new NotFoundException('Payment not found');
       }
 
-      if (action === 'pay') {
-        payment.status = PaymentStatus.SUCCESS;
-      } else {
-        payment.status = PaymentStatus.FAILED;
+      const targetStatus =
+        action === 'pay' ? PaymentStatus.SUCCESS : PaymentStatus.FAILED;
+
+      // Duplicate: trạng thái đã đúng với action
+      if (payment.status === targetStatus) {
+        return payment;
       }
 
-      await tx.save(payment);
+     
+      if (payment.status !== PaymentStatus.PENDING) {
+        throw new ConflictException(
+          `Payment already finalized as ${payment.status}`,
+        );
+      }
 
-      return payment;
+      payment.status = targetStatus;
+
+      return tx.save(Payment, payment);
     });
   }
 }

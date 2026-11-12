@@ -1,14 +1,14 @@
 import { Body, Controller, Param, Post } from '@nestjs/common';
-import { Ctx, MessagePattern, Payload } from '@nestjs/microservices';
+import { Ctx, EventPattern, Payload } from '@nestjs/microservices';
+import { OrderService } from './order.service';
 import { PAYMENT_CHARGE_COMMAND } from './saga.topic';
 import { type PaymentChargeCommand } from './saga.type';
-import { OrderService } from './order.service';
 
 @Controller('order')
 export class OrderController {
   constructor(private readonly orderService: OrderService) {}
 
-  @MessagePattern(PAYMENT_CHARGE_COMMAND)
+  @EventPattern(PAYMENT_CHARGE_COMMAND)
   async handlePaymentChargeCommand(
     @Payload() message: PaymentChargeCommand,
     @Ctx() context: unknown,

@@ -74,8 +74,8 @@ export class SagaService {
     this.logger.debug(
       `[Order-${payload.orderId}]: received event ReservationInventory Failed`,
     );
-    const [order, saga] = await this.datasource.manager.transaction(
-      async (tx) => {
+    const { shouldPublish, order, saga } =
+      await this.datasource.manager.transaction(async (tx) => {
         const [order, saga] = await this.getOrderAndSagaWithLock(tx, payload);
 
         if (!(
@@ -84,19 +84,23 @@ export class SagaService {
           saga.currentStep === SagaStep.RESERVE_INVENTORY
         )) {
           // idempotent & late message
-          return [order, saga];
+          return { shouldPublish: false, order, saga };
         }
 
         order.status = OrderStatus.REJECTED;
         saga.status = SagaStatus.COMPENSATED;
+        saga.currentStep = SagaStep.COMPLETED;
 
         await tx.save([order, saga]);
-        return [order, saga];
-      },
-    );
+        return { shouldPublish: true, order, saga };
+      });
+
+    if (!shouldPublish) return;
+
     await this.publishOrderCompensatedEvent(order, saga);
+
     this.logger.debug(
-      `[Order-${payload.orderId}]: publish event Order Compensated`,
+      `[Order-${payload.orderId}]: published OrderCompensatedEvent`,
     );
   }
 
@@ -122,8 +126,8 @@ export class SagaService {
     this.logger.debug(
       `[Order-${payload.orderId}]: received event ReservationInventory Success`,
     );
-    const [order, saga] = await this.datasource.manager.transaction(
-      async (tx) => {
+    const { order, shouldPublish, saga } =
+      await this.datasource.manager.transaction(async (tx) => {
         const [order, saga] = await this.getOrderAndSagaWithLock(tx, payload);
 
         if (!(
@@ -132,17 +136,17 @@ export class SagaService {
           saga.currentStep === SagaStep.RESERVE_INVENTORY
         )) {
           // idempotent & late message
-          return [order, saga];
+          return { shouldPublish: false, order, saga };
         }
 
         order.status = OrderStatus.PAYMENT_PENDING;
         saga.currentStep = SagaStep.CHARGE_PAYMENT;
 
         await tx.save([order, saga]);
-        return [order, saga];
-      },
-    );
+        return { shouldPublish: true, order, saga };
+      });
 
+    if (!shouldPublish) return;
     await this.publishPaymentChargeCommand(order, saga);
     this.logger.debug(
       `[Order-${payload.orderId}]: publish Command Paymetn Charge`,
@@ -199,8 +203,8 @@ export class SagaService {
     this.logger.debug(
       `[Order-${message.orderId}]: received event Charge Payment Success`,
     );
-    const [order, saga] = await this.datasource.manager.transaction(
-      async (tx) => {
+    const { shouldPublish, order, saga } =
+      await this.datasource.manager.transaction(async (tx) => {
         const [order, saga] = await this.getOrderAndSagaWithLock(tx, message);
 
         if (!(
@@ -208,18 +212,19 @@ export class SagaService {
           saga.status === SagaStatus.RUNNING &&
           saga.currentStep === SagaStep.CHARGE_PAYMENT
         )) {
-          // idempotent & late message
-          return [order, saga];
+          return { shouldPublish: false, order, saga };
         }
 
-        saga.currentStep = SagaStep.COMPLETED;
         order.status = OrderStatus.CONFIRMED;
+        saga.status = SagaStatus.COMPLETED;
+        saga.currentStep = SagaStep.COMPLETED;
 
         await tx.save([order, saga]);
 
-        return [order, saga];
-      },
-    );
+        return { shouldPublish: true, order, saga };
+      });
+
+    if (!shouldPublish) return;
 
     await this.publishOrderConfirmedEvent(order, saga);
     this.logger.debug(
@@ -247,8 +252,8 @@ export class SagaService {
       `[Order-${message.orderId}]: received event Charge Payment Failed`,
     );
 
-    const [order, saga] = await this.datasource.manager.transaction(
-      async (tx) => {
+    const { order, saga, shouldPublish } =
+      await this.datasource.manager.transaction(async (tx) => {
         const [order, saga] = await this.getOrderAndSagaWithLock(tx, message);
 
         if (!(
@@ -257,17 +262,18 @@ export class SagaService {
           saga.currentStep === SagaStep.CHARGE_PAYMENT
         )) {
           // idempotent & late message
-          return [order, saga];
+          return { order, saga, shouldPublish: false };
         }
 
+        saga.status = SagaStatus.COMPENSATING;
         saga.currentStep = SagaStep.RELEASE_INVENTORY;
-        order.status = OrderStatus.REJECTED;
 
         await tx.save([saga, order]);
 
-        return [order, saga];
-      },
-    );
+        return { order, saga, shouldPublish: true };
+      });
+
+    if (!shouldPublish) return;
 
     await this.publishInventoryReleaseCommand(order, saga);
 
@@ -306,35 +312,38 @@ export class SagaService {
       `[Order-${message.orderId}]: received event Inventort Release successful`,
     );
 
-    const [order, saga] = await this.datasource.manager.transaction(
-      async (tx) => {
+    const { order, saga, shouldPublish } =
+      await this.datasource.manager.transaction(async (tx) => {
         const [order, saga] = await this.getOrderAndSagaWithLock(tx, message);
 
         if (
-          order.status === OrderStatus.CANCELLED &&
+          order.status === OrderStatus.REJECTED &&
           saga.status === SagaStatus.COMPENSATED &&
           saga.currentStep === SagaStep.COMPLETED
         ) {
-          return [order, saga];
+          return { shouldPublish: false, order, saga };
         }
 
-        if (!(
-          order.status === OrderStatus.PAYMENT_PENDING &&
-          saga.status === SagaStatus.RUNNING &&
-          saga.currentStep === SagaStep.RELEASE_INVENTORY
-        )) {
-          throw new Error('Conflict status not valid');
+        if (
+          order.status !== OrderStatus.PAYMENT_PENDING ||
+          saga.status !== SagaStatus.COMPENSATING ||
+          saga.currentStep !== SagaStep.RELEASE_INVENTORY
+        ) {
+          throw new Error('Conflict: Invalid Saga state');
         }
 
-        order.status = OrderStatus.CANCELLED;
+        order.status = OrderStatus.REJECTED;
         saga.status = SagaStatus.COMPENSATED;
         saga.currentStep = SagaStep.COMPLETED;
+
         await tx.save([order, saga]);
-        return [order, saga];
-      },
-    );
+        return { shouldPublish: true, order, saga };
+      });
+
+    if (!shouldPublish) return;
 
     await this.publishOrderCompensatedEvent(order, saga);
+
     this.logger.debug(
       `[Order-${message.orderId}]: publish event Order Compensated`,
     );

@@ -167,7 +167,8 @@ export class ProductService {
 
       const products = await tx
         .createQueryBuilder(Product, 'p')
-        .where(`p.id IN :productIds`, { productIds: productIds })
+        .where(`p.id IN (:...productIds)`, { productIds: productIds })
+        .orderBy('p.id', 'ASC')
         .setLock('pessimistic_write')
         .getMany();
 
@@ -182,7 +183,9 @@ export class ProductService {
 
       productReservation.status = ReservationStatus.RELEASED;
 
-      await tx.save([...products, productReservation]);
+      await tx.save(Product, products);
+      await tx.save(ProductReservation, productReservation);
+      
       return productReservation;
     });
   }

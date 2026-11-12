@@ -9,7 +9,10 @@ import { ProductService } from '../product/product.service';
 import { ClientKafka } from '@nestjs/microservices';
 import { randomUUID } from 'crypto';
 import { firstValueFrom } from 'rxjs';
-import { INVENTORY_RELEASE_EVENT, INVENTORY_RESERVE_EVENT } from './order.topic';
+import {
+  INVENTORY_RELEASE_EVENT,
+  INVENTORY_RESERVE_EVENT,
+} from './order.topic';
 
 @Injectable()
 export class OrderService {
@@ -71,10 +74,12 @@ export class OrderService {
       type: 'event',
     };
 
-    this.client.emit(INVENTORY_RELEASE_EVENT, {
-      key: event.orderId,
-      value: event,
-    });
+    await firstValueFrom(
+      this.client.emit(INVENTORY_RELEASE_EVENT, {
+        key: event.orderId,
+        value: event,
+      }),
+    );
 
     this.logger.debug(
       `[Order-${message.orderId}]: published Event InventoryRelease `,
