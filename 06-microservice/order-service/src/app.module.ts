@@ -4,9 +4,13 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { OrderModule } from './order/order.module';
 import { SagaModule } from './saga/saga.module';
+import { OutboxModule } from '@saga/outbox';
+import { ScheduleModule } from '@nestjs/schedule';
+
 
 @Module({
   imports: [
+    ScheduleModule.forRoot(),
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
@@ -23,6 +27,11 @@ import { SagaModule } from './saga/saga.module';
         autoLoadEntities: true,
         synchronize: false,
       }),
+    }),
+
+    OutboxModule.forRoot({
+      brokers: ['localhost:9092'],
+      outboxLockKey: 'order_outbox',
     }),
     OrderModule,
     SagaModule,

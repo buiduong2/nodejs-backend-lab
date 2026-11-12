@@ -3,13 +3,15 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Order, OrderItem } from './order.entity';
 import { Repository } from 'typeorm';
 import { SagaService } from '../saga/saga.service';
+import { OutboxService } from '@saga/outbox';
+import { INVENTORY_RESERVE_COMMAND } from '@saga/contracts';
 
 @Injectable()
 export class OrderService {
   private readonly logger = new Logger(OrderService.name);
   constructor(
     @InjectRepository(Order) private orderRepository: Repository<Order>,
-
+    private readonly outboxService: OutboxService,
     private readonly sagaService: SagaService,
   ) {}
 
@@ -38,12 +40,24 @@ export class OrderService {
 
         const saga = await this.sagaService.startOrderSaga(tx, savedOrder);
 
+        const command = this.sagaService.createReservationCommand(order, saga);
+        
+        await this.outboxService.createMessage(
+          tx,
+          INVENTORY_RESERVE_COMMAND,
+          command.orderId,
+          command,
+        );
+
         return { order: savedOrder, saga };
       },
     );
-
-    await this.sagaService.publishReserveInventoryMessage(order, saga);
-    this.logger.debug(`[Order-${order.id}]: publish command ReservationInventory`);
+    
+    //TODO: remove
+    // await this.sagaService.publishReserveInventoryMessage(order, saga);
+    // this.logger.debug(
+    //   `[Order-${order.id}]: publish command ReservationInventory`,
+    // );
     return order;
   }
 }

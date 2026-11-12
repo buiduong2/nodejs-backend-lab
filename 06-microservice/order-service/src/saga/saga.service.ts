@@ -9,11 +9,8 @@ import {
   InventoryReservateSuccessEvent,
   InventoryReserveFailedEvent,
   MessageEnvelope,
-
   OrderCompensatedEvent,
-
   OrderConfirmedEvent,
-
   PaymentChargeCommand,
   PaymentChargeEvent,
   ReservatinFailedResult as ReservationFailedResult,
@@ -28,6 +25,7 @@ import {
   PAYMENT_CHARGE_COMMAND,
 } from '@saga/contracts';
 import { Saga, SagaStatus, SagaStep } from './saga.entity';
+import { OutboxService } from '@saga/outbox';
 
 @Injectable()
 export class SagaService {
@@ -36,6 +34,7 @@ export class SagaService {
   constructor(
     @Inject('ORDER_SAGA_PRODUCER') private kafkaClient: ClientKafka,
     private readonly datasource: DataSource,
+    private readonly outboxService: OutboxService,
   ) {}
 
   async startOrderSaga(tx: EntityManager, order: Order) {
@@ -50,8 +49,21 @@ export class SagaService {
     return await tx.save(saga);
   }
 
-  async publishReserveInventoryMessage(order: Order, saga: Saga) {
-    const reserveInventoryCmd: ReserveInventoryCommand = {
+  //TODO: remove
+//   async publishReserveInventoryMessage(order: Order, saga: Saga) {
+//     const reserveInventoryCmd: ReserveInventoryCommand =
+//       this.createReservationCommand(order, saga);
+
+//     await firstValueFrom(
+//       this.kafkaClient.emit<ReserveInventoryCommand>(
+//         INVENTORY_RESERVE_COMMAND,
+//         { key: order.id, value: reserveInventoryCmd },
+//       ),
+//     );
+//   }
+
+  createReservationCommand(order: Order, saga: Saga): ReserveInventoryCommand {
+    return {
       messageId: randomUUID(),
       occurredAt: new Date().toISOString(),
       orderId: order.id,
@@ -64,13 +76,6 @@ export class SagaService {
       sagaId: saga.id,
       type: 'command',
     };
-
-    await firstValueFrom(
-      this.kafkaClient.emit<ReserveInventoryCommand>(
-        INVENTORY_RESERVE_COMMAND,
-        { key: order.id, value: reserveInventoryCmd },
-      ),
-    );
   }
 
   async handleInventoryReserveFailed(payload: InventoryReserveFailedEvent) {
