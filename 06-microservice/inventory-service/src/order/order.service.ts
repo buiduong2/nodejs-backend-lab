@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import {
   INVENTORY_RESERVE_EVENT,
   InventoryReservateSuccessEvent,
@@ -12,6 +12,7 @@ import { firstValueFrom } from 'rxjs';
 
 @Injectable()
 export class OrderService {
+  private readonly logger = new Logger(OrderService.name);
   constructor(
     private productService: ProductService,
     @Inject('ORDER_SAGA_PRODUCER')
@@ -19,6 +20,9 @@ export class OrderService {
   ) {}
 
   async reserveInventory(message: ReserveInventoryCommand) {
+    this.logger.debug(
+      `[Order-${message.orderId}]: received Command InventoryReserve`,
+    );
     const result = await this.productService.handlerReserveInventory(message);
 
     const responseMessage:
@@ -30,11 +34,22 @@ export class OrderService {
       sagaId: message.sagaId,
       type: 'event',
     };
+
     await firstValueFrom(
       this.client.emit(INVENTORY_RESERVE_EVENT, {
         key: message.orderId,
         value: responseMessage,
       }),
     );
+
+    if (responseMessage.payload.success) {
+      this.logger.debug(
+        `[Order-${message.orderId}]: published Event InventoryReserve Successful`,
+      );
+    } else {
+      this.logger.debug(
+        `[Order-${message.orderId}]: published Event InventoryReserve Failed - reason: ${responseMessage.payload.reason}`,
+      );
+    }
   }
 }

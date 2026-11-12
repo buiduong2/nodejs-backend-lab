@@ -23,3 +23,4 @@
   - idempotentcy
   - Outbox pattern
   - DLQ, reliability
+  - skip

@@ -19,11 +19,51 @@ export interface ReserveInventoryPayload {
   }[];
 }
 
-export interface InventoryafiledEvent extends MessageEnvelop<
+export interface InventoryReserveFailedEvent extends MessageEnvelop<
   'event',
-  {
-    reason: 'OUT_OF_STOCK' | 'PRODUCT_NOT_FOUND';
-  }
+  ReservationResult
 > {}
 
-export interface InventorySuccessEvent extends MessageEnvelop<'event', {}> {}
+export interface InventoryReservateSuccessEvent extends MessageEnvelop<
+  'event',
+  ReservationResult
+> {}
+
+export interface InventoryReservationEvent extends MessageEnvelop<
+  'event',
+  ReservationResult
+> {}
+
+export type ReservationResult =
+  | {
+      success: true;
+      reservationId: string;
+    }
+  | {
+      success: false;
+      reason: 'OUT_OF_STOCK' | 'PRODUCT_NOT_FOUND';
+    };
+
+export type ReservationSuccessResult = { success: true } & ReservationResult;
+export type ReservatinFailedResult = { success: false } & ReservationResult;
+
+// ==== Payment
+export interface PaymentChargeCommand extends MessageEnvelop<
+  'command',
+  PaymentChargePayload
+> {}
+
+export interface PaymentChargePayload {
+  orderId: string;
+  items: { productId: string; quantity: number }[];
+  totalAmount: string;
+}
+
+// ==== Order Event
+export interface OrderCompensatedEvent extends MessageEnvelop<
+  'event',
+  {
+    orderId: string;
+    customerId: string;
+  }
+> {}
