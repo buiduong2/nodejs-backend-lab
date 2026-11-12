@@ -1,30 +1,24 @@
 import { Injectable } from '@nestjs/common'
-import { EntityManager, Repository } from 'typeorm'
+import { EntityManager } from 'typeorm'
 import { OutboxMessage, OutboxStatus } from './outbox.entity'
-import { InjectRepository } from '@nestjs/typeorm'
 
 @Injectable()
 export class OutboxService {
-	constructor(
-		@InjectRepository(OutboxMessage)
-		private readonly outboxRepository: Repository<OutboxMessage>
-	) {}
+	constructor() {}
 
-	async createMessage(
+	async createMessage<T>(
 		tx: EntityManager,
 		topic: string,
 		key: string,
-		value: any
-	) {
+		value: T
+	): Promise<OutboxMessage> {
 		const outbox = tx.create(OutboxMessage, {
 			messageKey: key,
 			payload: value,
-			topic,
-			attempts: 3,
-			status: OutboxStatus.PENDING
+			topic
 		})
 
-		return tx.save(outbox)
+		return tx.save(OutboxMessage, outbox)
 	}
 }
 

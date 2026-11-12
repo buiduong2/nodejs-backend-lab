@@ -49,19 +49,6 @@ export class SagaService {
     return await tx.save(saga);
   }
 
-  //TODO: remove
-//   async publishReserveInventoryMessage(order: Order, saga: Saga) {
-//     const reserveInventoryCmd: ReserveInventoryCommand =
-//       this.createReservationCommand(order, saga);
-
-//     await firstValueFrom(
-//       this.kafkaClient.emit<ReserveInventoryCommand>(
-//         INVENTORY_RESERVE_COMMAND,
-//         { key: order.id, value: reserveInventoryCmd },
-//       ),
-//     );
-//   }
-
   createReservationCommand(order: Order, saga: Saga): ReserveInventoryCommand {
     return {
       messageId: randomUUID(),
@@ -82,38 +69,38 @@ export class SagaService {
     this.logger.debug(
       `[Order-${payload.orderId}]: received event ReservationInventory Failed`,
     );
-    const { shouldPublish, order, saga } =
-      await this.datasource.manager.transaction(async (tx) => {
-        const [order, saga] = await this.getOrderAndSagaWithLock(tx, payload);
+    return this.datasource.manager.transaction(async (tx) => {
+      const [order, saga] = await this.getOrderAndSagaWithLock(tx, payload);
 
-        if (!(
-          order.status === OrderStatus.RESERVING_STOCK &&
-          saga.status === SagaStatus.RUNNING &&
-          saga.currentStep === SagaStep.RESERVE_INVENTORY
-        )) {
-          // idempotent & late message
-          return { shouldPublish: false, order, saga };
-        }
+      if (!(
+        order.status === OrderStatus.RESERVING_STOCK &&
+        saga.status === SagaStatus.RUNNING &&
+        saga.currentStep === SagaStep.RESERVE_INVENTORY
+      )) {
+        // idempotent & late message
+        return { order, saga };
+      }
 
-        order.status = OrderStatus.REJECTED;
-        saga.status = SagaStatus.COMPENSATED;
-        saga.currentStep = SagaStep.COMPLETED;
+      order.status = OrderStatus.REJECTED;
+      saga.status = SagaStatus.COMPENSATED;
+      saga.currentStep = SagaStep.COMPLETED;
 
-        await tx.save([order, saga]);
-        return { shouldPublish: true, order, saga };
-      });
+      await tx.save([order, saga]);
+      const msg = this.createOrderCompensatedEvent(order, saga);
+      await this.outboxService.createMessage(tx, ORDER_EVENT, order.id, msg);
 
-    if (!shouldPublish) return;
-
-    await this.publishOrderCompensatedEvent(order, saga);
-
-    this.logger.debug(
-      `[Order-${payload.orderId}]: published OrderCompensatedEvent`,
-    );
+      this.logger.debug(
+        `[Order-${payload.orderId}]: Created OrderCompensatedEvent`,
+      );
+      return { order, saga };
+    });
   }
 
-  async publishOrderCompensatedEvent(order: Order, saga: Saga) {
-    const message: OrderCompensatedEvent = {
+  private createOrderCompensatedEvent(
+    order: Order,
+    saga: Saga,
+  ): OrderCompensatedEvent {
+    return {
       messageId: randomUUID(),
       occurredAt: new Date().toISOString(),
       orderId: order.id,
@@ -124,45 +111,49 @@ export class SagaService {
       sagaId: saga.id,
       type: 'event',
     };
-
-    await firstValueFrom(
-      this.kafkaClient.emit(ORDER_EVENT, { key: order.id, value: message }),
-    );
   }
 
   async handleInventoryReserveSuccess(payload: InventoryReservateSuccessEvent) {
     this.logger.debug(
       `[Order-${payload.orderId}]: received event ReservationInventory Success`,
     );
-    const { order, shouldPublish, saga } =
-      await this.datasource.manager.transaction(async (tx) => {
-        const [order, saga] = await this.getOrderAndSagaWithLock(tx, payload);
+    return this.datasource.manager.transaction(async (tx) => {
+      const [order, saga] = await this.getOrderAndSagaWithLock(tx, payload);
 
-        if (!(
-          order.status === OrderStatus.RESERVING_STOCK &&
-          saga.status === SagaStatus.RUNNING &&
-          saga.currentStep === SagaStep.RESERVE_INVENTORY
-        )) {
-          // idempotent & late message
-          return { shouldPublish: false, order, saga };
-        }
+      if (!(
+        order.status === OrderStatus.RESERVING_STOCK &&
+        saga.status === SagaStatus.RUNNING &&
+        saga.currentStep === SagaStep.RESERVE_INVENTORY
+      )) {
+        // idempotent & late message
+        return { order, saga };
+      }
 
-        order.status = OrderStatus.PAYMENT_PENDING;
-        saga.currentStep = SagaStep.CHARGE_PAYMENT;
+      order.status = OrderStatus.PAYMENT_PENDING;
+      saga.currentStep = SagaStep.CHARGE_PAYMENT;
 
-        await tx.save([order, saga]);
-        return { shouldPublish: true, order, saga };
-      });
+      await tx.save([order, saga]);
+      const cmd = this.createPaymentChargeCommand(order, saga);
+      await this.outboxService.createMessage(
+        tx,
+        PAYMENT_CHARGE_COMMAND,
+        order.id,
+        cmd,
+      );
 
-    if (!shouldPublish) return;
-    await this.publishPaymentChargeCommand(order, saga);
-    this.logger.debug(
-      `[Order-${payload.orderId}]: publish Command Paymetn Charge`,
-    );
+      this.logger.debug(
+        `[Order-${payload.orderId}]: create Command Payment Charge`,
+      );
+
+      return { order, saga };
+    });
   }
 
-  async publishPaymentChargeCommand(order: Order, saga: Saga) {
-    const message: PaymentChargeCommand = {
+  private createPaymentChargeCommand(
+    order: Order,
+    saga: Saga,
+  ): PaymentChargeCommand {
+    return {
       messageId: randomUUID(),
       occurredAt: new Date().toISOString(),
       orderId: order.id,
@@ -177,12 +168,6 @@ export class SagaService {
       sagaId: saga.id,
       type: 'command',
     };
-    await firstValueFrom(
-      this.kafkaClient.emit(PAYMENT_CHARGE_COMMAND, {
-        key: order.id,
-        value: message,
-      }),
-    );
   }
 
   async getOrderAndSagaWithLock<P>(
@@ -211,37 +196,38 @@ export class SagaService {
     this.logger.debug(
       `[Order-${message.orderId}]: received event Charge Payment Success`,
     );
-    const { shouldPublish, order, saga } =
-      await this.datasource.manager.transaction(async (tx) => {
-        const [order, saga] = await this.getOrderAndSagaWithLock(tx, message);
+    return this.datasource.manager.transaction(async (tx) => {
+      const [order, saga] = await this.getOrderAndSagaWithLock(tx, message);
 
-        if (!(
-          order.status === OrderStatus.PAYMENT_PENDING &&
-          saga.status === SagaStatus.RUNNING &&
-          saga.currentStep === SagaStep.CHARGE_PAYMENT
-        )) {
-          return { shouldPublish: false, order, saga };
-        }
+      if (!(
+        order.status === OrderStatus.PAYMENT_PENDING &&
+        saga.status === SagaStatus.RUNNING &&
+        saga.currentStep === SagaStep.CHARGE_PAYMENT
+      )) {
+        return { order, saga };
+      }
 
-        order.status = OrderStatus.CONFIRMED;
-        saga.status = SagaStatus.COMPLETED;
-        saga.currentStep = SagaStep.COMPLETED;
+      order.status = OrderStatus.CONFIRMED;
+      saga.status = SagaStatus.COMPLETED;
+      saga.currentStep = SagaStep.COMPLETED;
 
-        await tx.save([order, saga]);
+      await tx.save([order, saga]);
 
-        return { shouldPublish: true, order, saga };
-      });
+      const event = this.createOrderConfirmedEvent(order, saga);
+      await this.outboxService.createMessage(tx, ORDER_EVENT, order.id, event);
+      this.logger.debug(
+        `[Order-${message.orderId}]: create event order Confirmed. Create Order Done`,
+      );
 
-    if (!shouldPublish) return;
-
-    await this.publishOrderConfirmedEvent(order, saga);
-    this.logger.debug(
-      `[Order-${message.orderId}]: publish event order Confirmed. Create Order Done`,
-    );
+      return { order, saga };
+    });
   }
 
-  async publishOrderConfirmedEvent(order: Order, saga: Saga) {
-    const event: OrderConfirmedEvent = {
+  private createOrderConfirmedEvent(
+    order: Order,
+    saga: Saga,
+  ): OrderConfirmedEvent {
+    return {
       messageId: randomUUID(),
       occurredAt: new Date().toISOString(),
       orderId: order.id,
@@ -249,10 +235,6 @@ export class SagaService {
       sagaId: saga.id,
       type: 'event',
     };
-
-    await firstValueFrom(
-      this.kafkaClient.emit(ORDER_EVENT, { key: order.id, value: event }),
-    );
   }
 
   async handlePaymentChargeFailedEvent(message: PaymentChargeEvent) {
@@ -260,38 +242,43 @@ export class SagaService {
       `[Order-${message.orderId}]: received event Charge Payment Failed`,
     );
 
-    const { order, saga, shouldPublish } =
-      await this.datasource.manager.transaction(async (tx) => {
-        const [order, saga] = await this.getOrderAndSagaWithLock(tx, message);
+    return this.datasource.manager.transaction(async (tx) => {
+      const [order, saga] = await this.getOrderAndSagaWithLock(tx, message);
 
-        if (!(
-          order.status === OrderStatus.PAYMENT_PENDING &&
-          saga.status === SagaStatus.RUNNING &&
-          saga.currentStep === SagaStep.CHARGE_PAYMENT
-        )) {
-          // idempotent & late message
-          return { order, saga, shouldPublish: false };
-        }
+      if (!(
+        order.status === OrderStatus.PAYMENT_PENDING &&
+        saga.status === SagaStatus.RUNNING &&
+        saga.currentStep === SagaStep.CHARGE_PAYMENT
+      )) {
+        // idempotent & late message
+        return { order, saga };
+      }
 
-        saga.status = SagaStatus.COMPENSATING;
-        saga.currentStep = SagaStep.RELEASE_INVENTORY;
+      saga.status = SagaStatus.COMPENSATING;
+      saga.currentStep = SagaStep.RELEASE_INVENTORY;
+      await tx.save([saga, order]);
 
-        await tx.save([saga, order]);
+      const cmd = this.createInventoryReleaseCommand(order, saga);
+      await this.outboxService.createMessage(
+        tx,
+        INVENTORY_RELEASE_COMMAND,
+        order.id,
+        cmd,
+      );
 
-        return { order, saga, shouldPublish: true };
-      });
+      this.logger.debug(
+        `[Order-${message.orderId}]: Create inventory Release Command`,
+      );
 
-    if (!shouldPublish) return;
-
-    await this.publishInventoryReleaseCommand(order, saga);
-
-    this.logger.debug(
-      `[Order-${message.orderId}]: Publish command Release Command`,
-    );
+      return { order, saga };
+    });
   }
 
-  async publishInventoryReleaseCommand(order: Order, saga: Saga) {
-    const command: InventoryReleaseCommand = {
+  private createInventoryReleaseCommand(
+    order: Order,
+    saga: Saga,
+  ): InventoryReleaseCommand {
+    return {
       messageId: randomUUID(),
       occurredAt: new Date().toISOString(),
       orderId: order.id,
@@ -304,13 +291,6 @@ export class SagaService {
       sagaId: saga.id,
       type: 'command',
     };
-
-    await firstValueFrom(
-      this.kafkaClient.emit(INVENTORY_RELEASE_COMMAND, {
-        key: order.id,
-        value: command,
-      }),
-    );
   }
 
   async handleInventoryReleaseSuccessEvent(
@@ -320,40 +300,38 @@ export class SagaService {
       `[Order-${message.orderId}]: received event Inventort Release successful`,
     );
 
-    const { order, saga, shouldPublish } =
-      await this.datasource.manager.transaction(async (tx) => {
-        const [order, saga] = await this.getOrderAndSagaWithLock(tx, message);
+    return this.datasource.manager.transaction(async (tx) => {
+      const [order, saga] = await this.getOrderAndSagaWithLock(tx, message);
 
-        if (
-          order.status === OrderStatus.REJECTED &&
-          saga.status === SagaStatus.COMPENSATED &&
-          saga.currentStep === SagaStep.COMPLETED
-        ) {
-          return { shouldPublish: false, order, saga };
-        }
+      if (
+        order.status === OrderStatus.REJECTED &&
+        saga.status === SagaStatus.COMPENSATED &&
+        saga.currentStep === SagaStep.COMPLETED
+      ) {
+        return { order, saga };
+      }
 
-        if (
-          order.status !== OrderStatus.PAYMENT_PENDING ||
-          saga.status !== SagaStatus.COMPENSATING ||
-          saga.currentStep !== SagaStep.RELEASE_INVENTORY
-        ) {
-          throw new Error('Conflict: Invalid Saga state');
-        }
+      if (
+        order.status !== OrderStatus.PAYMENT_PENDING ||
+        saga.status !== SagaStatus.COMPENSATING ||
+        saga.currentStep !== SagaStep.RELEASE_INVENTORY
+      ) {
+        throw new Error('Conflict: Invalid Saga state');
+      }
 
-        order.status = OrderStatus.REJECTED;
-        saga.status = SagaStatus.COMPENSATED;
-        saga.currentStep = SagaStep.COMPLETED;
+      order.status = OrderStatus.REJECTED;
+      saga.status = SagaStatus.COMPENSATED;
+      saga.currentStep = SagaStep.COMPLETED;
 
-        await tx.save([order, saga]);
-        return { shouldPublish: true, order, saga };
-      });
+      await tx.save([order, saga]);
 
-    if (!shouldPublish) return;
+      const event = this.createOrderCompensatedEvent(order, saga);
+      await this.outboxService.createMessage(tx, ORDER_EVENT, order.id, event);
 
-    await this.publishOrderCompensatedEvent(order, saga);
-
-    this.logger.debug(
-      `[Order-${message.orderId}]: publish event Order Compensated`,
-    );
+      this.logger.debug(
+        `[Order-${message.orderId}]: create event Order Compensated`,
+      );
+      return { order, saga };
+    });
   }
 }

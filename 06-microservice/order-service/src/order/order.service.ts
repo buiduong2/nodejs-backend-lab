@@ -52,12 +52,10 @@ export class OrderService {
         return { order: savedOrder, saga };
       },
     );
-    
-    //TODO: remove
-    // await this.sagaService.publishReserveInventoryMessage(order, saga);
-    // this.logger.debug(
-    //   `[Order-${order.id}]: publish command ReservationInventory`,
-    // );
+
+    this.logger.debug(
+      `[Order-${order.id}]: save command ReservationInventory`,
+    );
     return order;
   }
 }
