@@ -47,8 +47,14 @@ export type ReservationResult =
 export type ReservationSuccessResult = { success: true } & ReservationResult;
 export type ReservatinFailedResult = { success: false } & ReservationResult;
 
-
-export interface InventoryReleaseCommand extends MessageEnvelop<'command',ReserveInventoryPayload>{}
+export interface InventoryReleaseCommand extends MessageEnvelop<
+  'command',
+  ReserveInventoryPayload
+> {}
+export interface InventoryReleaseSuccessEvent extends MessageEnvelop<
+  'event',
+  { reservationId: string }
+> {}
 
 // ==== Payment
 export interface PaymentChargeCommand extends MessageEnvelop<

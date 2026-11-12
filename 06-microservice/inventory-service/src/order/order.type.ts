@@ -18,9 +18,6 @@ export interface ReserveInventoryPayload {
     quantity: number;
   }[];
 }
-
-export const INVENTORY_RESERVE_COMMAND = 'order.inventory.reserve';
-export const INVENTORY_RESERVE_EVENT = 'order.inventory.event';
 export interface InventoryReserveFailedEvent extends MessageEnvelop<
   'event',
   ReservationResult
@@ -41,4 +38,9 @@ export type ReservationResult =
       reason: 'OUT_OF_STOCK' | 'PRODUCT_NOT_FOUND';
     };
 
-export type ReservationSuccessResult = {sucess: true} & ReservationResult;
+export type ReservationSuccessResult = { sucess: true } & ReservationResult;
+
+export interface InventoryReleaseSuccessEvent extends MessageEnvelop<
+  'event',
+  { reservationId: string }
+> {}

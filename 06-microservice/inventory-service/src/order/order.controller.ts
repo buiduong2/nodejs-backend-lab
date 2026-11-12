@@ -4,15 +4,14 @@ import {
   Ctx,
   EventPattern,
   KafkaContext,
-  MessagePattern,
   Payload,
 } from '@nestjs/microservices';
-import {
-  INVENTORY_RESERVE_COMMAND,
-  INVENTORY_RESERVE_EVENT,
-  type ReserveInventoryCommand,
-} from './order.type';
 import { OrderService } from './order.service';
+import { type ReserveInventoryCommand } from './order.type';
+import {
+  INVENTORY_RELEASE_COMMAND,
+  INVENTORY_RESERVE_COMMAND,
+} from './order.topic';
 
 @Controller('order')
 export class OrderController {
@@ -32,6 +31,11 @@ export class OrderController {
     await this.orderService.reserveInventory(message);
   }
 
-
-
+  @EventPattern(INVENTORY_RELEASE_COMMAND)
+  async handleInventoryReleaseCommand(
+    @Payload() message: ReserveInventoryCommand,
+    @Ctx() context: unknown,
+  ) {
+    await this.orderService.releaseInventory(message);
+  }
 }

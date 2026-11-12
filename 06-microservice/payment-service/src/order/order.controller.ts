@@ -6,25 +6,21 @@ import { OrderService } from './order.service';
 
 @Controller('order')
 export class OrderController {
-
-    
-
   constructor(private readonly orderService: OrderService) {}
 
   @MessagePattern(PAYMENT_CHARGE_COMMAND)
-  handlePaymentChargeCommand(
+  async handlePaymentChargeCommand(
     @Payload() message: PaymentChargeCommand,
     @Ctx() context: unknown,
   ) {
-
-    this.orderService.handlePaymentChargeCommand(message);
+    await this.orderService.handlePaymentChargeCommand(message);
   }
 
   @Post(':id/charge-payment')
-  chargePayment(
+  async chargePayment(
     @Param('id') id: string,
     @Body() body: { action: 'pay' | 'reject' },
   ) {
-    this.orderService.chargePayment(id, body.action);
+    await this.orderService.chargePayment(id, body.action);
   }
 }

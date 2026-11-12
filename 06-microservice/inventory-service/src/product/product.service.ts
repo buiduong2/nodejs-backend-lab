@@ -8,6 +8,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Product } from './product.entity';
 import {
   ProductReservation,
+  ProductreservationItem,
   ReservationStatus,
 } from './product-reservation.entity';
 
@@ -134,6 +135,56 @@ export class ProductService {
     ]);
 
     return savedReservation;
+  }
+
+  async releaseReservation(message: ReserveInventoryCommand) {
+    return this.productRepository.manager.transaction(async (tx) => {
+      const productReservation = await tx.findOne(ProductReservation, {
+        where: {
+          orderId: message.orderId,
+          sagaId: message.sagaId,
+        },
+        lock: {
+          mode: 'pessimistic_write',
+        },
+      });
+
+      if (!productReservation) {
+        throw new Error('Conflict. Resource not found');
+      }
+
+      if (productReservation.status === ReservationStatus.RELEASED) {
+        return productReservation;
+      }
+      if (productReservation.status !== ReservationStatus.RESERVED) {
+        throw new Error('Conflict, Status Not valid');
+      }
+
+      const productIds = productReservation.items.map((r) => r.productId);
+      const reservatedQuantityMap = new Map(
+        productReservation.items.map((r) => [r.productId, r.quantity]),
+      );
+
+      const products = await tx
+        .createQueryBuilder(Product, 'p')
+        .where(`p.id IN :productIds`, { productIds: productIds })
+        .setLock('pessimistic_write')
+        .getMany();
+
+      if (products.length !== productIds.length) {
+        throw new Error('Conflict , some product is missing');
+      }
+
+      products.forEach((p) => {
+        p.reservedQuantity =
+          p.reservedQuantity - reservatedQuantityMap.get(p.id)!;
+      });
+
+      productReservation.status = ReservationStatus.RELEASED;
+
+      await tx.save([...products, productReservation]);
+      return productReservation;
+    });
   }
 }
 

@@ -5,6 +5,7 @@ import { firstValueFrom } from 'rxjs';
 import { DataSource, EntityManager } from 'typeorm';
 import {
   InventoryReleaseCommand,
+  InventoryReleaseSuccessEvent,
   InventoryReservateSuccessEvent,
   InventoryReserveFailedEvent,
   MessageEnvelop,
@@ -270,10 +271,9 @@ export class SagaService {
 
     await this.publishInventoryReleaseCommand(order, saga);
 
-        this.logger.debug(
+    this.logger.debug(
       `[Order-${message.orderId}]: Publish command Release Command`,
     );
-
   }
 
   async publishInventoryReleaseCommand(order: Order, saga: Saga) {
@@ -299,5 +299,44 @@ export class SagaService {
     );
   }
 
-  
+  async handleInventoryReleaseSuccessEvent(
+    message: InventoryReleaseSuccessEvent,
+  ) {
+    this.logger.debug(
+      `[Order-${message.orderId}]: received event Inventort Release successful`,
+    );
+
+    const [order, saga] = await this.datasource.manager.transaction(
+      async (tx) => {
+        const [order, saga] = await this.getOrderAndSagaWithLock(tx, message);
+
+        if (
+          order.status === OrderStatus.CANCELLED &&
+          saga.status === SagaStatus.COMPENSATED &&
+          saga.currentStep === SagaStep.COMPLETED
+        ) {
+          return [order, saga];
+        }
+
+        if (!(
+          order.status === OrderStatus.PAYMENT_PENDING &&
+          saga.status === SagaStatus.RUNNING &&
+          saga.currentStep === SagaStep.RELEASE_INVENTORY
+        )) {
+          throw new Error('Conflict status not valid');
+        }
+
+        order.status = OrderStatus.CANCELLED;
+        saga.status = SagaStatus.COMPENSATED;
+        saga.currentStep = SagaStep.COMPLETED;
+        await tx.save([order, saga]);
+        return [order, saga];
+      },
+    );
+
+    await this.publishOrderCompensatedEvent(order, saga);
+    this.logger.debug(
+      `[Order-${message.orderId}]: publish event Order Compensated`,
+    );
+  }
 }

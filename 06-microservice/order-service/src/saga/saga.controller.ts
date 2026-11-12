@@ -5,12 +5,17 @@ import {
   MessagePattern,
   Payload,
 } from '@nestjs/microservices';
-import { INVENTORY_RESERVE_EVENT, PAYMENT_CHARGE_EVENT } from './saga.topic';
+import {
+  INVENTORY_RELEASE_EVENT,
+  INVENTORY_RESERVE_EVENT,
+  PAYMENT_CHARGE_EVENT,
+} from './saga.topic';
 import {
   type PaymentChargeEvent,
   type PaymentChargePayload,
   type InventoryReservationEvent,
   type ReservationResult,
+  type InventoryReleaseSuccessEvent,
 } from '../kafka/kafka.type';
 import { SagaService } from './saga.service';
 
@@ -19,28 +24,36 @@ export class SagaController {
   constructor(private readonly sagaService: SagaService) {}
 
   @MessagePattern(INVENTORY_RESERVE_EVENT)
-  handleInventoryReserveEvent(
+  async handleInventoryReserveEvent(
     @Payload() message: InventoryReservationEvent,
     @Ctx() context: unknown,
   ) {
     // const kafkaContext = context as KafkaContext;
 
     if (message.payload.success) {
-      this.sagaService.handleInventoryReserveSuccess(message);
+      await this.sagaService.handleInventoryReserveSuccess(message);
     } else {
-      this.sagaService.handleInventoryReserveFailed(message);
+      await this.sagaService.handleInventoryReserveFailed(message);
     }
   }
 
   @MessagePattern(PAYMENT_CHARGE_EVENT)
-  handlePaymentChargeEvent(
+  async handlePaymentChargeEvent(
     @Payload() message: PaymentChargeEvent,
     @Ctx() context: unknown,
   ) {
     if (message.payload.success) {
-      this.sagaService.handlePaymentChargeSuccessEvent(message);
+      await this.sagaService.handlePaymentChargeSuccessEvent(message);
     } else {
-      this.sagaService.handlePaymentChargeFailedEvent(message);
+      await this.sagaService.handlePaymentChargeFailedEvent(message);
     }
+  }
+
+  @MessagePattern(INVENTORY_RELEASE_EVENT)
+  async handleInventoryReleaseEvent(
+    @Payload() message: InventoryReleaseSuccessEvent,
+    @Ctx() context: unknown,
+  ) {
+    await this.sagaService.handleInventoryReleaseSuccessEvent(message);
   }
 }
