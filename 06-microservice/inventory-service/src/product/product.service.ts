@@ -20,48 +20,46 @@ export class ProductService {
   ) {}
 
   async handlerReserveInventory(
+    tx: EntityManager,
     message: ReserveInventoryCommand,
   ): Promise<ReservationResult> {
-    return this.productRepository.manager.transaction(async (tx) => {
-      // idempotency
-      const existing = await tx.findOne(ProductReservation, {
-        where: { orderId: message.orderId },
-      });
+    const existing = await tx.findOne(ProductReservation, {
+      where: { orderId: message.orderId },
+    });
 
-      if (existing) {
-        if (
-          existing.sagaId !== message.sagaId ||
-          existing.status !== ReservationStatus.RESERVED
-        ) {
-          throw new Error('Reservation conflict');
-        }
-
-        return {
-          success: true,
-          reservationId: existing.id,
-        };
+    if (existing) {
+      if (
+        existing.sagaId !== message.sagaId ||
+        existing.status !== ReservationStatus.RESERVED
+      ) {
+        throw new Error('Reservation conflict');
       }
-
-      const result = await this.validateOrderItems(tx, message.payload);
-
-      if (!result.success) {
-        return {
-          success: result.success,
-          reason: result.reason,
-        };
-      }
-
-      const productReservation = await this.reverseInventory(
-        tx,
-        message,
-        result.products,
-      );
 
       return {
         success: true,
-        reservationId: productReservation.id,
+        reservationId: existing.id,
       };
-    });
+    }
+
+    const result = await this.validateOrderItems(tx, message.payload);
+
+    if (!result.success) {
+      return {
+        success: result.success,
+        reason: result.reason,
+      };
+    }
+
+    const productReservation = await this.reverseInventory(
+      tx,
+      message,
+      result.products,
+    );
+
+    return {
+      success: true,
+      reservationId: productReservation.id,
+    };
   }
 
   async validateOrderItems(
@@ -137,57 +135,58 @@ export class ProductService {
     return savedReservation;
   }
 
-  async releaseReservation(message: ReserveInventoryCommand) {
-    return this.productRepository.manager.transaction(async (tx) => {
-      const productReservation = await tx.findOne(ProductReservation, {
-        where: {
-          orderId: message.orderId,
-          sagaId: message.sagaId,
-        },
-        lock: {
-          mode: 'pessimistic_write',
-        },
-      });
-
-      if (!productReservation) {
-        throw new Error('Conflict. Resource not found');
-      }
-
-      if (productReservation.status === ReservationStatus.RELEASED) {
-        return productReservation;
-      }
-      if (productReservation.status !== ReservationStatus.RESERVED) {
-        throw new Error('Conflict, Status Not valid');
-      }
-
-      const productIds = productReservation.items.map((r) => r.productId);
-      const reservatedQuantityMap = new Map(
-        productReservation.items.map((r) => [r.productId, r.quantity]),
-      );
-
-      const products = await tx
-        .createQueryBuilder(Product, 'p')
-        .where(`p.id IN (:...productIds)`, { productIds: productIds })
-        .orderBy('p.id', 'ASC')
-        .setLock('pessimistic_write')
-        .getMany();
-
-      if (products.length !== productIds.length) {
-        throw new Error('Conflict , some product is missing');
-      }
-
-      products.forEach((p) => {
-        p.reservedQuantity =
-          p.reservedQuantity - reservatedQuantityMap.get(p.id)!;
-      });
-
-      productReservation.status = ReservationStatus.RELEASED;
-
-      await tx.save(Product, products);
-      await tx.save(ProductReservation, productReservation);
-      
-      return productReservation;
+  async releaseReservation(
+    tx: EntityManager,
+    message: ReserveInventoryCommand,
+  ) {
+    const productReservation = await tx.findOne(ProductReservation, {
+      where: {
+        orderId: message.orderId,
+        sagaId: message.sagaId,
+      },
+      lock: {
+        mode: 'pessimistic_write',
+      },
     });
+
+    if (!productReservation) {
+      throw new Error('Conflict. Resource not found');
+    }
+
+    if (productReservation.status === ReservationStatus.RELEASED) {
+      return productReservation;
+    }
+    if (productReservation.status !== ReservationStatus.RESERVED) {
+      throw new Error('Conflict, Status Not valid');
+    }
+
+    const productIds = productReservation.items.map((r) => r.productId);
+    const reservatedQuantityMap = new Map(
+      productReservation.items.map((r) => [r.productId, r.quantity]),
+    );
+
+    const products = await tx
+      .createQueryBuilder(Product, 'p')
+      .where(`p.id IN (:...productIds)`, { productIds: productIds })
+      .orderBy('p.id', 'ASC')
+      .setLock('pessimistic_write')
+      .getMany();
+
+    if (products.length !== productIds.length) {
+      throw new Error('Conflict , some product is missing');
+    }
+
+    products.forEach((p) => {
+      p.reservedQuantity =
+        p.reservedQuantity - reservatedQuantityMap.get(p.id)!;
+    });
+
+    productReservation.status = ReservationStatus.RELEASED;
+
+    await tx.save(Product, products);
+    await tx.save(ProductReservation, productReservation);
+
+    return productReservation;
   }
 }
 

@@ -1,3 +1,4 @@
+import { OutboxMessage } from '@saga/outbox';
 import 'dotenv/config';
 import { DataSource } from 'typeorm';
 
@@ -9,7 +10,7 @@ export default new DataSource({
   password: process.env.DB_PASSWORD,
   database: process.env.DB_DATABASE,
 
-  entities: ['src/**/*.entity.ts'],
+  entities: ['src/**/*.entity.ts', OutboxMessage],
   migrations: ['src/database/migrations/*.ts'],
 
   synchronize: false,

@@ -7,6 +7,7 @@ import { ClientKafka } from '@nestjs/microservices';
 import { randomUUID } from 'crypto';
 import { PAYMENT_CHARGE_EVENT } from '@saga/contracts';
 import { firstValueFrom } from 'rxjs';
+import { OutboxService } from '@saga/outbox';
 
 @Injectable()
 export class OrderService {
@@ -15,6 +16,7 @@ export class OrderService {
     private readonly dataSource: DataSource,
     @Inject('ORDER_SAGA_PRODUCER')
     private client: ClientKafka,
+    private outboxService:OutboxService
   ) {}
 
   async handlePaymentChargeCommand(message: PaymentChargeCommand) {
@@ -31,30 +33,28 @@ export class OrderService {
     });
   }
 
-  async publishPaymentChargeEvent(payment: Payment, success: boolean) {
-    const event: PaymentChargeEvent = {
-      messageId: randomUUID(),
-      occurredAt: new Date().toISOString(),
-      orderId: payment.orderId,
-      payload: { paymentId: payment.id, success },
-      sagaId: payment.sagaId,
-      type: 'event',
-    };
-
-    await firstValueFrom(
-      this.client.emit(PAYMENT_CHARGE_EVENT, {
-        key: payment.orderId,
-        value: event,
-      }),
-    );
-  }
-
   async chargePayment(orderId: string, action: 'pay' | 'reject') {
-    const payment = await this.paymentService.charge(orderId, action);
+    await this.dataSource.manager.transaction(async (tx) => {
+      const payment = await this.paymentService.charge(orderId, action);
 
-    await this.publishPaymentChargeEvent(
-      payment,
-      payment.status === PaymentStatus.SUCCESS,
-    );
+      const event: PaymentChargeEvent = {
+        messageId: randomUUID(),
+        occurredAt: new Date().toISOString(),
+        orderId: payment.orderId,
+        payload: {
+          paymentId: payment.id,
+          success: payment.status === PaymentStatus.SUCCESS,
+        },
+        sagaId: payment.sagaId,
+        type: 'event',
+      };
+
+      await this.outboxService.createMessage(
+        tx,
+        PAYMENT_CHARGE_EVENT,
+        payment.orderId,
+        event,
+      );
+    });
   }
 }

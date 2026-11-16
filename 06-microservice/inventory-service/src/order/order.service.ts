@@ -13,6 +13,8 @@ import {
   INVENTORY_RELEASE_EVENT,
   INVENTORY_RESERVE_EVENT,
 } from '@saga/contracts';
+import { DataSource } from 'typeorm';
+import { OutboxService } from '@saga/outbox';
 
 @Injectable()
 export class OrderService {
@@ -21,29 +23,41 @@ export class OrderService {
     private productService: ProductService,
     @Inject('ORDER_SAGA_PRODUCER')
     private client: ClientKafka,
+    private dataSource: DataSource,
+    private outboxService: OutboxService,
   ) {}
 
   async reserveInventory(message: ReserveInventoryCommand) {
     this.logger.debug(
       `[Order-${message.orderId}]: received Command InventoryReserve`,
     );
-    const result = await this.productService.handlerReserveInventory(message);
 
-    const responseMessage:
-      InventoryReserveFailedEvent | InventoryReservateSuccessEvent = {
-      messageId: randomUUID(),
-      occurredAt: new Date().toISOString(),
-      orderId: message.orderId,
-      payload: result,
-      sagaId: message.sagaId,
-      type: 'event',
-    };
+    const responseMessage = await this.dataSource.manager.transaction(
+      async (tx) => {
+        const result = await this.productService.handlerReserveInventory(
+          tx,
+          message,
+        );
 
-    await firstValueFrom(
-      this.client.emit(INVENTORY_RESERVE_EVENT, {
-        key: message.orderId,
-        value: responseMessage,
-      }),
+        const responseMessage:
+          InventoryReserveFailedEvent | InventoryReservateSuccessEvent = {
+          messageId: randomUUID(),
+          occurredAt: new Date().toISOString(),
+          orderId: message.orderId,
+          payload: result,
+          sagaId: message.sagaId,
+          type: 'event',
+        };
+
+        this.outboxService.createMessage(
+          tx,
+          INVENTORY_RESERVE_EVENT,
+          message.orderId,
+          responseMessage,
+        );
+
+        return responseMessage;
+      },
     );
 
     if (responseMessage.payload.success) {
@@ -62,24 +76,28 @@ export class OrderService {
       `[Order-${message.orderId}]: received Command release Inventory`,
     );
 
-    const productReservation =
-      await this.productService.releaseReservation(message);
+    await this.dataSource.manager.transaction(async (tx) => {
+      const productReservation = await this.productService.releaseReservation(
+        tx,
+        message,
+      );
 
-    const event: InventoryReleaseSuccessEvent = {
-      messageId: randomUUID(),
-      occurredAt: new Date().toISOString(),
-      orderId: message.orderId,
-      payload: { reservationId: productReservation.id },
-      sagaId: productReservation.sagaId,
-      type: 'event',
-    };
+      const event: InventoryReleaseSuccessEvent = {
+        messageId: randomUUID(),
+        occurredAt: new Date().toISOString(),
+        orderId: message.orderId,
+        payload: { reservationId: productReservation.id },
+        sagaId: productReservation.sagaId,
+        type: 'event',
+      };
 
-    await firstValueFrom(
-      this.client.emit(INVENTORY_RELEASE_EVENT, {
-        key: event.orderId,
-        value: event,
-      }),
-    );
+      this.outboxService.createMessage(
+        tx,
+        INVENTORY_RELEASE_EVENT,
+        event.orderId,
+        event,
+      );
+    });
 
     this.logger.debug(
       `[Order-${message.orderId}]: published Event InventoryRelease `,

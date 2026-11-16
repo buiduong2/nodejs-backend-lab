@@ -20,8 +20,8 @@
 
 - Giai Đoạn 2: 
   - idempotentcy
-  - Outbox pattern
-  - DLQ, reliability
+  - Outbox pattern [x]
+  - DLQ, reliability 
   - skip
 
 ###  Luồng thực thi

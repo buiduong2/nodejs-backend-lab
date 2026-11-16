@@ -3,10 +3,12 @@ import { Module } from '@nestjs/common';
 import { ProductModule } from './product/product.module';
 import { OrderModule } from './order/order.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-
+import { OutboxModule } from '@saga/outbox';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ScheduleModule } from '@nestjs/schedule';
 @Module({
   imports: [
+    ScheduleModule.forRoot(),
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
@@ -23,6 +25,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
         autoLoadEntities: true,
         synchronize: false,
       }),
+    }),
+    OutboxModule.forRoot({
+      brokers: ['localhost:9092'],
+      outboxLockKey: 'order_outbox',
     }),
     ProductModule,
     OrderModule,
