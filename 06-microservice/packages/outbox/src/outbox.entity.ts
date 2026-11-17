@@ -29,6 +29,15 @@ export class OutboxMessage {
 	@Column({ enum: OutboxStatus, default: OutboxStatus.PENDING })
 	status!: OutboxStatus
 
+	// @Column()
+	// aggregateId!: string
+
+	@Column({ type: 'text', nullable: true })
+	lastError: string | null
+
+	@Column({ type: 'uuid', nullable: true })
+	claimToken: string | null
+
 	@Column({ default: 0 })
 	attempts!: number
 

@@ -14,15 +14,20 @@
 
 ### Phase 
 
-- Giai đoạn 1 :
-  - Chỉ tạo orchestraion cơ bản 
-  - Saga Entity lưu trạng thái Step
+## Phase 1: Basic Saga Orchestration [x]
+- [x] Order → Inventory → Payment
+- [x] Saga state persistence
+- [x] Compensation flow
 
-- Giai Đoạn 2: 
-  - idempotentcy
-  - Outbox pattern [x]
-  - DLQ, reliability 
-  - skip
+## Phase 2: Reliability
+- [x] Business idempotency (basic)
+- [x] Transactional Outbox
+- [x] Outbox retry, lease & recovery
+- [ ] Consumer retry & failure handling
+- [ ] Inbox pattern
+- [ ] Dead Letter Queue (DLQ)
+- [ ] Message ordering
+- [ ] Integration & failure testing
 
 ###  Luồng thực thi
 
