@@ -1,7 +1,7 @@
 import { ClientKafka, KafkaContext } from '@nestjs/microservices'
 import { isRetryableDatabaseError, retry, RetryOptions } from '@saga/utils'
 import { firstValueFrom } from 'rxjs'
-import { createDeadLetterMessage } from './create-dl-msg.js'
+import { createDeadLetterMessage } from '../utils/create-dl-msg.js'
 
 export type Options<TMessage> = {
 	message: TMessage

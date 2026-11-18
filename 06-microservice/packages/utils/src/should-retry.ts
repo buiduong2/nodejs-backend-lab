@@ -1,19 +1,22 @@
-import { QueryFailedError } from 'typeorm'
-
-const RETRYABLE_DB_CODES = new Set([
-	'40001', // serialization_failure
-	'40P01', // deadlock_detected
-	'08001', // sqlclient_unable_to_establish_sqlconnection
-	'08006' // connection_failure
-])
+const RETRYABLE_DB_CODES = new Set(['40001', '40P01', '08001', '08006'])
 
 export function isRetryableDatabaseError(error: unknown): boolean {
-	if (error instanceof QueryFailedError) {
-		const driverError = error.driverError as {
-			code?: string
-		}
-		return RETRYABLE_DB_CODES.has(driverError.code ?? '')
+	if (!error || typeof error !== 'object') {
+		return false
 	}
 
-    return false;
+	const candidate = error as {
+		name?: unknown
+		driverError?: {
+			code?: unknown
+		}
+	}
+
+	if (candidate.name !== 'QueryFailedError') {
+		return false
+	}
+
+	const code = candidate.driverError?.code
+
+	return typeof code === 'string' && RETRYABLE_DB_CODES.has(code)
 }

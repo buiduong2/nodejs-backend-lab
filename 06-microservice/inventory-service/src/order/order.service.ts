@@ -1,5 +1,6 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import {
+    InventoryReleaseCommand,
   InventoryReleaseSuccessEvent,
   InventoryReservateSuccessEvent,
   InventoryReserveFailedEvent,
@@ -85,7 +86,7 @@ export class OrderService {
     }
   }
 
-  async releaseInventory(message: ReserveInventoryCommand) {
+  async releaseInventory(message: InventoryReleaseCommand) {
     this.logger.debug(
       `[Order-${message.orderId}]: received Command release Inventory`,
     );

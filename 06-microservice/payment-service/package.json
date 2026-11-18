@@ -34,6 +34,7 @@
     "@nestjs/schedule": "^12.0.3",
     "@nestjs/typeorm": "^12.0.3",
     "@saga/contracts": "workspace:*",
+    "@saga/messaging": "workspace:*",
     "@saga/outbox": "workspace:*",
     "@saga/utils": "workspace:*",
     "class-transformer": "^0.5.1",

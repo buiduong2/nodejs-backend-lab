@@ -3,7 +3,8 @@ import { OrderController } from './order.controller';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { OrderService } from './order.service';
 import { ProductModule } from '../product/product.module';
-
+import { APP_INTERCEPTOR, ModuleRef, Reflector } from '@nestjs/core';
+import { KafkaReliabilityInterceptor } from '@saga/messaging';
 @Module({
   imports: [
     ClientsModule.register([
@@ -22,6 +23,14 @@ import { ProductModule } from '../product/product.module';
     ProductModule,
   ],
   controllers: [OrderController],
-  providers: [OrderService],
+  providers: [
+    OrderService,
+    {
+      provide: APP_INTERCEPTOR,
+      useFactory: (reflector: Reflector, moduleRef: ModuleRef) =>
+        new KafkaReliabilityInterceptor(reflector, moduleRef),
+      inject: [Reflector, ModuleRef],
+    },
+  ],
 })
 export class OrderModule {}

@@ -10,6 +10,7 @@ import { OrderService } from './order.service';
 import {
   INVENTORY_RELEASE_COMMAND_DLQ,
   INVENTORY_RESERVE_COMMAND_DLQ,
+  type InventoryReleaseCommand,
   type ReserveInventoryCommand,
 } from '@saga/contracts';
 import {
@@ -19,12 +20,13 @@ import {
 import { retry, isRetryableDatabaseError } from '@saga/utils';
 import { firstValueFrom } from 'rxjs';
 import { createDeadLetterMessage } from '@saga/outbox';
-import { handleKafkaMessage } from '@saga/messaging';
+import { handleKafkaMessage, KafkaReliable } from '@saga/messaging';
+import { QueryFailedError } from 'typeorm';
 
 @Controller('order')
 export class OrderController {
   private logger = new Logger(Controller.name);
-  
+
   constructor(
     @Inject('ORDER_SAGA_PRODUCER')
     private client: ClientKafka,
@@ -32,46 +34,34 @@ export class OrderController {
   ) {}
 
   @EventPattern(INVENTORY_RESERVE_COMMAND)
+  @KafkaReliable<ReserveInventoryCommand>({
+    dlqTopic: INVENTORY_RESERVE_COMMAND_DLQ,
+    backoffMultiplier: 2,
+    delayMs: 1000,
+    maxAttempts: 3,
+    clientToken: 'ORDER_SAGA_PRODUCER',
+    getMessageKey: (msg) => msg.orderId,
+  })
   async handleInventoryReserveCommand(
     @Payload() message: ReserveInventoryCommand,
     @Ctx() context: unknown,
   ) {
-    const kafkaContext = context as KafkaContext;
-    await handleKafkaMessage(
-      () => this.orderService.reserveInventory(message),
-      {
-        client: this.client,
-        context: kafkaContext,
-        getMessageKey: (msg) => msg.orderId,
-        dlqTopic: INVENTORY_RESERVE_COMMAND_DLQ,
-        message: message,
-        onMovedToDlq: () =>
-          this.logger.warn(
-            `[Order-${message.orderId}] Message moved to DLQ: ${INVENTORY_RESERVE_COMMAND_DLQ}`,
-          ),
-      },
-    );
+    await this.orderService.reserveInventory(message);
   }
 
   @EventPattern(INVENTORY_RELEASE_COMMAND)
+  @KafkaReliable<InventoryReleaseCommand>({
+    dlqTopic: INVENTORY_RELEASE_COMMAND_DLQ,
+    backoffMultiplier: 2,
+    delayMs: 1000,
+    maxAttempts: 3,
+    clientToken: 'ORDER_SAGA_PRODUCER',
+    getMessageKey: (msg) => msg.orderId,
+  })
   async handleInventoryReleaseCommand(
-    @Payload() message: ReserveInventoryCommand,
+    @Payload() message: InventoryReleaseCommand,
     @Ctx() context: unknown,
   ) {
-    const kafkaContext = context as KafkaContext;
-    await handleKafkaMessage(
-      () => this.orderService.releaseInventory(message),
-      {
-        client: this.client,
-        context: kafkaContext,
-        dlqTopic: INVENTORY_RELEASE_COMMAND_DLQ,
-        getMessageKey: (msg) => msg.orderId,
-        message: message,
-        onMovedToDlq: () =>
-          this.logger.warn(
-            `[Order-${message.orderId}] Message moved to DLQ: ${INVENTORY_RELEASE_COMMAND_DLQ}`,
-          ),
-      },
-    );
+    await this.orderService.releaseInventory(message);
   }
 }

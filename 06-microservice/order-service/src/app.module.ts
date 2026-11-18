@@ -7,7 +7,6 @@ import { SagaModule } from './saga/saga.module';
 import { OutboxModule } from '@saga/outbox';
 import { ScheduleModule } from '@nestjs/schedule';
 
-
 @Module({
   imports: [
     ScheduleModule.forRoot(),
