@@ -32,41 +32,55 @@ export class OrderService {
       `[Order-${message.orderId}]: received Command InventoryReserve`,
     );
 
-    const responseMessage = await this.dataSource.manager.transaction(
+    const { duplicate, msg } = await this.dataSource.manager.transaction(
       async (tx) => {
-        const result = await this.productService.handlerReserveInventory(
+        await tx.query(`SET LOCAL statement_timeout = '5s'`);
+        await tx.query(`SET LOCAL lock_timeout = '2s'`);
+
+        const outcome = await this.productService.handlerReserveInventory(
           tx,
           message,
         );
+
+        if (outcome.duplicate) {
+          return { duplicate: true, msg: null };
+        }
 
         const responseMessage:
           InventoryReserveFailedEvent | InventoryReservateSuccessEvent = {
           messageId: randomUUID(),
           occurredAt: new Date().toISOString(),
           orderId: message.orderId,
-          payload: result,
+          payload: outcome.result,
           sagaId: message.sagaId,
           type: 'event',
         };
 
-        this.outboxService.createMessage(
+        await this.outboxService.createMessage(
           tx,
           INVENTORY_RESERVE_EVENT,
           message.orderId,
           responseMessage,
         );
 
-        return responseMessage;
+        return { duplicate: false, msg: responseMessage };
       },
     );
 
-    if (responseMessage.payload.success) {
+    if (msg === null || duplicate) {
       this.logger.debug(
-        `[Order-${message.orderId}]: published Event InventoryReserve Successful`,
+        `[Order-${message.orderId}]: Skip Event because duplicated`,
+      );
+      return;
+    }
+
+    if (msg.payload.success) {
+      this.logger.debug(
+        `[Order-${message.orderId}]: queued InventoryReserveSuccessEvent to Outbox`,
       );
     } else {
       this.logger.debug(
-        `[Order-${message.orderId}]: published Event InventoryReserve Failed - reason: ${responseMessage.payload.reason}`,
+        `[Order-${message.orderId}]: puqueued InventoryReserveFailedEvent to Outbox - reason: ${msg.payload.reason}`,
       );
     }
   }

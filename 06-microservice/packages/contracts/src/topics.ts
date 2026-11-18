@@ -1,5 +1,7 @@
 export const INVENTORY_RESERVE_COMMAND = 'order.inventory.reserve';
 export const INVENTORY_RESERVE_EVENT = 'order.inventory.event';
+export const INVENTORY_RESERVE_COMMAND_DLQ = 'order.inventory.reserve.dlq'
+
 export const INVENTORY_RELEASE_COMMAND = 'order.inventory.release'
 export const INVENTORY_RELEASE_EVENT = 'order.inventory.release.event';
 

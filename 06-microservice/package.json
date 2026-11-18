@@ -3,6 +3,7 @@
     "private": true,
     "scripts": {
         "dev": "pnpm --parallel --filter order-service --filter inventory-service --filter payment-service run start:dev",
-        "build": "pnpm --filter @saga/contracts build && pnpm --filter './*-service' build"
+        "build": "pnpm --filter @saga/contracts build && pnpm --filter './*-service' build",
+        "truncate:resource": "./script/truncate-database.sh && ./script/truncate-kafka.sh"
     }
 }

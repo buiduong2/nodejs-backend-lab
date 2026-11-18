@@ -1,0 +1,23 @@
+
+{
+    "files.exclude": {
+       // --- Cấu hình ẩn cho NestJS ---
+        // Ẩn thư mục test (E2E tests) ở mọi cấp độ
+        "**/test": true,
+
+        // Ẩn tất cả các file .json ở thư mục gốc (package.json, tsconfig.json, nest-cli.json, v.v.)
+        // "**/*.json": true,
+
+        // Ẩn các file cấu hình và tài liệu khác ở thư mục gốc
+        // "**/.eslintrc*": true,
+        // "**/.prettierrc*": true,
+        // "**/.gitignore": true,
+        // // "**/README.md": true,
+        // "**/.env*": true,
+        // "**/webpack.config.js": true,
+        // "**/.gitattributes": true,
+        // "**/tsconfig.build.tsbuildinfo": true,
+        // "**/jest.config.ts": true,
+
+    }
+}

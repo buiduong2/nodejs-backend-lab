@@ -11,6 +11,7 @@ import {
   ProductreservationItem,
   ReservationStatus,
 } from './product-reservation.entity';
+import { ReserveInventoryOutcome, ValidateResult } from '../order/order.type';
 
 @Injectable()
 export class ProductService {
@@ -22,7 +23,7 @@ export class ProductService {
   async handlerReserveInventory(
     tx: EntityManager,
     message: ReserveInventoryCommand,
-  ): Promise<ReservationResult> {
+  ): Promise<ReserveInventoryOutcome> {
     const existing = await tx.findOne(ProductReservation, {
       where: { orderId: message.orderId },
     });
@@ -36,8 +37,7 @@ export class ProductService {
       }
 
       return {
-        success: true,
-        reservationId: existing.id,
+        duplicate: true,
       };
     }
 
@@ -45,8 +45,11 @@ export class ProductService {
 
     if (!result.success) {
       return {
-        success: result.success,
-        reason: result.reason,
+        duplicate: false,
+        result: {
+          success: result.success,
+          reason: result.reason,
+        },
       };
     }
 
@@ -57,8 +60,11 @@ export class ProductService {
     );
 
     return {
-      success: true,
-      reservationId: productReservation.id,
+      duplicate: false,
+      result: {
+        success: true,
+        reservationId: productReservation.id,
+      },
     };
   }
 
@@ -190,12 +196,3 @@ export class ProductService {
   }
 }
 
-type ValidateResult =
-  | {
-      success: false;
-      reason: 'PRODUCT_NOT_FOUND' | 'OUT_OF_STOCK';
-    }
-  | {
-      success: true;
-      products: Product[];
-    };

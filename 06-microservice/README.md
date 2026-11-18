@@ -23,7 +23,9 @@
 - [x] Business idempotency (basic)
 - [x] Transactional Outbox
 - [x] Outbox retry, lease & recovery
-- [ ] Consumer retry & failure handling
+- [ ] Consumer retry & failure handling & skip\
+  - [ ] Sử dụng in-process retry , khoảng chờ ngắn
+  - [ ] Tạo Outbox Message riêng cho mỗi bước nghiệp vụ thực sự mới.
 - [ ] Inbox pattern
 - [ ] Dead Letter Queue (DLQ)
 - [ ] Message ordering
