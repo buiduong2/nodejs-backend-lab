@@ -4,8 +4,10 @@ import { zValidator } from '@hono/zod-validator'
 import { Hono } from 'hono'
 import { eventsRouter } from './modules/events/events.route.js'
 import { errorHandler, notFoundHandler } from './common/errors/error-handler.js'
+import type { Variables } from 'hono/types'
+import { jwt } from 'hono/jwt'
 
-const app = new Hono()
+const app = new Hono<{ Variables: Variables }>()
 
 app.get('/', c => {
 	return c.text('Hello Hono!')

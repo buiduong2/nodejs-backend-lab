@@ -13,6 +13,7 @@ import {
 	validatePathId,
 	validateQuery
 } from '../../common/zvalidate/validate.js'
+import { jwtMiddleware } from '../../common/auth/jwt.middleware.js'
 
 export const eventsRouter = new Hono()
 	//GET /events?page=1&limit=10&status=PUBLISHED
@@ -22,7 +23,7 @@ export const eventsRouter = new Hono()
 	.get('/:id', validatePathId(), async c => {
 		return c.json(await eventService.findById(c.req.valid('param').id))
 	})
-	.post('/', validateBody(CreateEventSchema), async c => {
+	.post('/', jwtMiddleware, validateBody(CreateEventSchema), async c => {
 		const body = c.req.valid('json')
 
 		const event = await eventService.create(body)
@@ -31,6 +32,7 @@ export const eventsRouter = new Hono()
 	})
 	.patch(
 		'/:id',
+        jwtMiddleware,
 		validateBody(UpdateEventSchema),
 		validatePathId(),
 		async c => {
@@ -46,6 +48,7 @@ export const eventsRouter = new Hono()
 	// event-type
 	.post(
 		'/:eventId/ticket-types',
+        jwtMiddleware,
 		validateBody(CreateTypeTicketSchema),
 		zValidator(
 			'param',
@@ -66,6 +69,7 @@ export const eventsRouter = new Hono()
 
 	.get(
 		'/:eventId/ticket-types',
+        
 		zValidator(
 			'param',
 			z.object({ eventId: z.coerce.number().positive().int() })

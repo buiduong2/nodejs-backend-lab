@@ -23,13 +23,19 @@
 - [x] Business idempotency (basic)
 - [x] Transactional Outbox
 - [x] Outbox retry, lease & recovery
-- [ ] Consumer retry & failure handling & skip\
-  - [ ] Sử dụng in-process retry , khoảng chờ ngắn
-  - [ ] Tạo Outbox Message riêng cho mỗi bước nghiệp vụ thực sự mới.
+- [x] Consumer retry & failure handling & skip\
+  - [x] Sử dụng in-process retry , khoảng chờ ngắn
+  - [x] Tạo Outbox Message riêng cho mỗi bước nghiệp vụ thực sự mới.
+
+- [x] DLQ Recovery
 - [ ] Inbox pattern
 - [ ] Dead Letter Queue (DLQ)
 - [ ] Message ordering
 - [ ] Integration & failure testing
+- [ ] Saga Recovery
+  - [ ] Detect
+  - [ ] Reconcile
+  - [ ] Recover
 
 ###  Luồng thực thi
 
